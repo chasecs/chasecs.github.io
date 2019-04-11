@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="JavaScript 支持函数作用域，并且会在作用域内提升变量声明，因此容易引发理解上的混乱。var 声明支持函数作用域，不支持块作用域。而 ES6 引入的 let、const 则支持块作用域，使用 let、 const 代替 var 可以避免许多不必要的错误">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript 作用域及 var、let、const">
+<meta property="og:url" content="https://chasecs.github.io/2019/04/12/2017-10-26-javascript-scoping-and-statements-of-var-let-const/index.html">
+<meta property="og:site_name" content="编程日志">
+<meta property="og:description" content="JavaScript 支持函数作用域，并且会在作用域内提升变量声明，因此容易引发理解上的混乱。var 声明支持函数作用域，不支持块作用域。而 ES6 引入的 let、const 则支持块作用域，使用 let、 const 代替 var 可以避免许多不必要的错误">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-04-11T16:42:11.715Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JavaScript 作用域及 var、let、const">
+<meta name="twitter:description" content="JavaScript 支持函数作用域，并且会在作用域内提升变量声明，因此容易引发理解上的混乱。var 声明支持函数作用域，不支持块作用域。而 ES6 引入的 let、const 则支持块作用域，使用 let、 const 代替 var 可以避免许多不必要的错误">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://chasecs.github.io/2019/04/12/2017-10-26-javascript-scoping-and-statements-of-var-let-const/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>JavaScript 作用域及 var、let、const | 编程日志</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">编程日志</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/04/12/2017-10-26-javascript-scoping-and-statements-of-var-let-const/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程日志">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JavaScript 作用域及 var、let、const
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-04-12 00:42:11" itemprop="dateCreated datePublished" datetime="2019-04-12T00:42:11+08:00">2019-04-12</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+            <div class="post-description"> JavaScript 支持函数作用域，并且会在作用域内提升变量声明，因此容易引发理解上的混乱。var 声明支持函数作用域，不支持块作用域。而 ES6 引入的 let、const 则支持块作用域，使用 let、 const 代替 var 可以避免许多不必要的错误</div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <ul>
+<li><a href="#函数作用域">函数作用域</a></li>
+<li><a href="#变量提升">变量提升</a></li>
+<li><a href="#避免变量提升带来混乱">避免变量提升带来混乱</a></li>
+<li><a href="#使用let而不是var">使用 let 而不是 var</a></li>
+<li><a href="#用const声明常量">用 const 声明常量</a></li>
+</ul>
+<p>先看一段 js 代码：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Code_1</span></span><br><span class="line"><span class="keyword">var</span> foo = <span class="number">1</span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">bar</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!foo) &#123;</span><br><span class="line">		<span class="keyword">var</span> foo = <span class="number">10</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	alert(foo);</span><br><span class="line">&#125;</span><br><span class="line">bar();</span><br></pre></td></tr></table></figure></p>
+<p>这段代码最终输出的结果是：10。</p>
+<p>再看一段代码：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Code_2</span></span><br><span class="line"><span class="keyword">var</span> a = <span class="number">1</span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">b</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	a = <span class="number">10</span>;</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">	<span class="function"><span class="keyword">function</span> <span class="title">a</span>(<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line">b();</span><br><span class="line">alert(a);</span><br></pre></td></tr></table></figure></p>
+<p>这段代码最终输出的结果是：1。</p>
+<p>如果你不能理解上面两段代码的运行结果，很可能就是对 javascript 的作用域和变量提升不熟悉。<em>（当然，一般情况下还是不要写出像上面那样的代码，声明和调用（赋值）倒置，纯粹增加理解难度。）</em></p>
+<h2 id="函数作用域"><a href="#函数作用域" class="headerlink" title="函数作用域"></a>函数作用域</h2><p>JavaScript 和其它很多编程语言有一个不同在于，它支持函数作用域（function-level scope），也就是说，它的变量的作用域会以函数为单位。其它编程语言比如 C，则支持块作用域（block-level scope）。</p>
+<p>比如 C 语言的 <code>if(){}</code> 里面的变量有单独作用域，不污染 <code>{}</code> 以外的变量:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Code_3</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> x = <span class="number">1</span>;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d, "</span>, x); <span class="comment">// 1</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="number">1</span>) &#123;</span><br><span class="line">		<span class="keyword">int</span> x = <span class="number">2</span>;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"%d, "</span>, x); <span class="comment">// 2</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%d\n"</span>, x); <span class="comment">// 1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>而下面 js 代码里的 <code>if(){}</code> 块，并没有创建新的作用域，因此会污染外部变量 <code>x</code>：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Code_4</span></span><br><span class="line"><span class="keyword">var</span> x = <span class="number">1</span>;</span><br><span class="line"><span class="built_in">console</span>.log(x); <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">if</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">	<span class="keyword">var</span> x = <span class="number">2</span>;</span><br><span class="line">	<span class="built_in">console</span>.log(x); <span class="comment">// 2</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">console</span>.log(x); <span class="comment">// 2</span></span><br></pre></td></tr></table></figure></p>
+<blockquote>
+</blockquote>
+<p><em>需要注意的是，js 并不是不支持块作用域，ES6 引入 <code>let</code> 就是的 js 支持块作用域，下文介绍</em></p>
+<h2 id="变量提升"><a href="#变量提升" class="headerlink" title="变量提升"></a>变量提升</h2><p>提到 js 的作用域，就不得不提变量提升。变量提升可以理解为，变量和函数声明从它们在代码中出现的位置，“被移动”到作用域的最顶端。例如上文 <code>Code_1</code> 中的 <code>bar()</code> 为例，实际上会按以下形式处理：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Code_5</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">bar</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="keyword">var</span> foo ;    <span class="comment">//变量 foo 被提升到作用域单元的顶部，</span></span><br><span class="line">	<span class="keyword">if</span> (!foo) &#123;</span><br><span class="line">		foo = <span class="number">10</span>;  <span class="comment">//对 foo 赋值</span></span><br><span class="line">	&#125;</span><br><span class="line">	alert(foo); <span class="comment">// 10</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这也是为什么<code>Code_1</code>最后后输出的结果是 10 原因。</p>
+<p>之所以会有变量提升这种情况，是因为 JavaScript 引擎处理代码时是分两步走的，第一步是编译，工作内容就包括找到所有的声明，并用合适的作用域将它们关联起来（并在这个过程中可以优化性能），然后第二步才是执行代码（比如赋值）。</p>
+<p>关于变量提升，有几点需要注意的：</p>
+<ol>
+<li><p><strong>只提升声明，不提升赋值</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x = <span class="number">1</span>; <span class="comment">// Initialize x</span></span><br><span class="line"><span class="built_in">console</span>.log(x + <span class="string">" "</span> + y); <span class="comment">// '1 undefined'</span></span><br><span class="line"><span class="keyword">var</span> y = <span class="number">2</span>;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * var x, y;</span></span><br><span class="line"><span class="comment"> * x = 1</span></span><br><span class="line"><span class="comment"> * console.log(x + " " + y);</span></span><br><span class="line"><span class="comment"> * y = 2</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>函数提升优先</strong>  </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">foo(); <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">var</span> foo;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log( <span class="number">1</span> );</span><br><span class="line">&#125;</span><br><span class="line">foo = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log( <span class="number">2</span> );</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * function foo() &#123;</span></span><br><span class="line"><span class="comment"> *   console.log( 1 );</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> * foo(); // 1</span></span><br><span class="line"><span class="comment"> * foo = function() &#123;</span></span><br><span class="line"><span class="comment"> *   console.log( 2 );</span></span><br><span class="line"><span class="comment"> * &#125;;</span></span><br><span class="line"><span class="comment"> * //var foo 是重复声明，被忽略掉</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="避免变量提升带来混乱"><a href="#避免变量提升带来混乱" class="headerlink" title="避免变量提升带来混乱"></a>避免变量提升带来混乱</h2><p>虽然 js 有变量提升这种特性，但如果你的代码出现，变量调用早于声明的情况，多少会造成理解混乱。</p>
+<p>所以最明智的做法是，总是在作用域的顶部先声明变量。比如，每个作用域只使用一个 <code>var</code> 关键字，而且在顶部使用，这样可以迫使把所有的变量都声明在顶部位置。</p>
+<p>当然，进入 ES6 时代，是可以摈弃 <code>var</code>，拥抱 <code>let</code> 和 <code>const</code>。</p>
+<h2 id="使用-let-而不是-var"><a href="#使用-let-而不是-var" class="headerlink" title="使用 let 而不是 var"></a><a name="使用let而不是var">使用 let 而不是 var</a></h2><p>ES 6 语法引入了 <code>let</code> 语句。 <code>let</code> 和 <code>var</code> 最大区别是，<code>let</code> 所声明的变量支持块作用域。</p>
+<p><a href="https://stackoverflow.com/a/11444416" target="_blank" rel="noopener">source</a><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">allyIlliterate</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">//tuce is *not* visible out here</span></span><br><span class="line">    <span class="keyword">for</span>( <span class="keyword">let</span> tuce = <span class="number">0</span>; tuce &lt; <span class="number">5</span>; tuce++ ) &#123;</span><br><span class="line">        <span class="comment">//tuce is only visible in here (and in the for() parentheses)</span></span><br><span class="line">        <span class="comment">//and there is a separate tuce variable for each iteration of the loop</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//tuce is *not* visible out here</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">byE40</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">//nish *is* visible out here</span></span><br><span class="line">    <span class="keyword">for</span>( <span class="keyword">var</span> nish = <span class="number">0</span>; nish &lt; <span class="number">5</span>; nish++ ) &#123;</span><br><span class="line">        <span class="comment">//nish is visible to the whole function</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//nish *is* visible out here</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>此外，<code>let</code> 和 <code>var</code> 还有以下一些区别：</p>
+<ul>
+<li><p><strong><code>let</code> 不存在“变量提升”</strong></p>
+  <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">do_something</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(bar); <span class="comment">// undefined</span></span><br><span class="line">  <span class="built_in">console</span>.log(foo); <span class="comment">// ReferenceError</span></span><br><span class="line">  <span class="keyword">var</span> bar = <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">let</span> foo = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong><code>let</code> 不能重复声明</strong></p>
+  <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (x) &#123;</span><br><span class="line">  <span class="keyword">let</span> foo;</span><br><span class="line">  <span class="keyword">let</span> foo; <span class="comment">// SyntaxError thrown.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>使用 <code>let</code> 还需要注意，<strong>只要块级作用域内存在 let，它所声明的变量就“绑定”（binding）这个区域，形成一个暂时死区（temporal dead zone），不再受外部的影响</strong>。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">test</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">   <span class="keyword">var</span> foo = <span class="number">33</span>;</span><br><span class="line">   <span class="keyword">if</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">      <span class="keyword">let</span> foo = (foo + <span class="number">55</span>); <span class="comment">// ReferenceError</span></span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line">test();</span><br></pre></td></tr></table></figure>
+<p>相比 <code>var</code> ，使用 <code>let</code> 避免许多容易造成混乱的场景，所以在 <strong>能用 <code>let</code> 的场景就不要使用 <code>var</code></strong>。</p>
+<h2 id="用-const-声明常量"><a href="#用-const-声明常量" class="headerlink" title="用 const 声明常量"></a><a name="用const声明常量">用 const 声明常量</a></h2><p><code>const</code> 和 <code>let</code> 一样，都是 ES6 引入的，它和 <code>let</code> 很相似，不过，用 <code>const</code> 声明的值不能被重新赋值，也不能重新声明。<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> MY_FAV = <span class="number">7</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// this will throw an error - Uncaught TypeError: Assignment to constant variable.</span></span><br><span class="line">MY_FAV = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// trying to redeclare a constant throws an error -  Uncaught SyntaxError: Identifier 'MY_FAV' has already been declared</span></span><br><span class="line"><span class="keyword">const</span> MY_FAV = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// this throws an error too</span></span><br><span class="line"><span class="keyword">let</span> MY_FAV = <span class="number">20</span>;</span><br></pre></td></tr></table></figure></p>
+<p><code>const</code> 必须在声明时初始化，以下代码会报错：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// throws an error - Uncaught SyntaxError: Missing initializer in const declaration</span></span><br><span class="line"><span class="keyword">const</span> FOO;</span><br></pre></td></tr></table></figure></p>
+<p><strong>const 声明的值不是不能修改（not about immutability），而是不能修改绑定（immutable binding）</strong>。</p>
+<p>比如，用 <code>const</code> 声明一个对象，你不能对这个变量重新赋值，但这个对象内部数据是可以改变的：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> foo = &#123;&#125;;</span><br><span class="line">foo = [] <span class="comment">// TypeError: Assignment to constant variable</span></span><br><span class="line"></span><br><span class="line">foo.bar = <span class="number">42</span>;</span><br><span class="line"><span class="built_in">console</span>.log(foo.bar);</span><br><span class="line"><span class="comment">// → 42</span></span><br></pre></td></tr></table></figure></p>
+<p>如果真要定义一个不可修改的对象，应该使用 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze" target="_blank" rel="noopener">Object.freeze()</a>：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> foo = <span class="built_in">Object</span>.freeze(&#123;</span><br><span class="line">	<span class="string">'bar'</span>: <span class="number">27</span></span><br><span class="line">&#125;);</span><br><span class="line">foo.bar = <span class="number">42</span>; <span class="comment">// throws a TypeError exception in strict mode;</span></span><br><span class="line">              <span class="comment">// silently fails in sloppy mode</span></span><br><span class="line"><span class="built_in">console</span>.log(foo.bar);</span><br><span class="line"><span class="comment">// → 27</span></span><br></pre></td></tr></table></figure></p>
+<p>(完)</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/Hoisting" target="_blank" rel="noopener">Hoisting MDN</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const" target="_blank" rel="noopener">const MDN</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let" target="_blank" rel="noopener">let MDN</a></li>
+<li><a href="http://es6.ruanyifeng.com/#docs/let#let-命令" target="_blank" rel="noopener">let 和 const 命令</a></li>
+<li><a href="https://github.com/getify/You-Dont-Know-JS/blob/master/scope%20&amp;%20closures/README.md#you-dont-know-js-scope--closures" target="_blank" rel="noopener">You Don’t Know JS: Scope &amp; Closures</a></li>
+<li><a href="http://www.adequatelygood.com/JavaScript-Scoping-and-Hoisting.html" target="_blank" rel="noopener">JavaScript Scoping and Hoisting</a></li>
+<li><a href="https://stackoverflow.com/questions/762011/whats-the-difference-between-using-let-and-var-to-declare-a-variable" target="_blank" rel="noopener">What’s the difference between using “let” and “var” to declare a variable?</a></li>
+<li><a href="https://softwareengineering.stackexchange.com/questions/274342/is-there-any-reason-to-use-the-var-keyword-in-es6" target="_blank" rel="noopener">Is there any reason to use the “var” keyword in ES6?</a></li>
+<li><a href="https://mathiasbynens.be/notes/es6-const" target="_blank" rel="noopener">ES6 const is not about immutability</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/12/2017-10-14-javascript-data-types/" rel="next" title="JavaScript 数据类型判断">
+                <i class="fa fa-chevron-left"></i> JavaScript 数据类型判断
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ttimehc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#函数作用域"><span class="nav-number">1.</span> <span class="nav-text">函数作用域</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#变量提升"><span class="nav-number">2.</span> <span class="nav-text">变量提升</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#避免变量提升带来混乱"><span class="nav-number">3.</span> <span class="nav-text">避免变量提升带来混乱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-let-而不是-var"><span class="nav-number">4.</span> <span class="nav-text">使用 let 而不是 var</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#用-const-声明常量"><span class="nav-number">5.</span> <span class="nav-text">用 const 声明常量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ttimehc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

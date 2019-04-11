@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。   本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用...">
+<meta property="og:type" content="article">
+<meta property="og:title" content="React + Redux 应用的开发流程，以购物车为例">
+<meta property="og:url" content="https://chasecs.github.io/2019/04/12/2017-09-02-react-redux-shopping-cart-demo/index.html">
+<meta property="og:site_name" content="编程日志">
+<meta property="og:description" content="Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。   本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用...">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-04-11T16:42:11.712Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="React + Redux 应用的开发流程，以购物车为例">
+<meta name="twitter:description" content="Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。   本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用...">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://chasecs.github.io/2019/04/12/2017-09-02-react-redux-shopping-cart-demo/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>React + Redux 应用的开发流程，以购物车为例 | 编程日志</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">编程日志</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/04/12/2017-09-02-react-redux-shopping-cart-demo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程日志">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">React + Redux 应用的开发流程，以购物车为例
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-04-12 00:42:11" itemprop="dateCreated datePublished" datetime="2019-04-12T00:42:11+08:00">2019-04-12</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+            <div class="post-description">Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。   本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用...</div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>项目的 repository：<a href="https://github.com/chasecs/react-redux-shopping-cart-demo" target="_blank" rel="noopener">react-redux-shopping-cart-demo</a></strong></p>
+<p>Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。<br>本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用。<br>阅读之前，假设你已经了解 Redux 的三个核心概念：Action，Reducer，Store，并且知道三者在 Redux 的工作流程所承担的角色和功能。<br>文中使用的实例 “shopping-cart”，参考自官方的示例<a href="https://github.com/reactjs/redux/tree/master/examples/shopping-cart" target="_blank" rel="noopener">shopping-cart</a>，虽然实现同样的效果，但是代码有较大的差异。</p>
+<h2 id="零、-react-redux-目录结构"><a href="#零、-react-redux-目录结构" class="headerlink" title="零、 react-redux 目录结构"></a>零、 react-redux 目录结构</h2><p>使用 <code>create-react-app</code> 创建项目，并安装相关依赖：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ create-react-app react-redux-shopping-cart-demo</span><br><span class="line">$ <span class="built_in">cd</span> react-redux-shopping-cart-demo</span><br><span class="line">$ npm i -S redux react-redux</span><br></pre></td></tr></table></figure></p>
+<p>在 <code>src/</code> 下创建项目的目录结构:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">|- /src</span><br><span class="line">  |- /actions</span><br><span class="line">  |- /constants</span><br><span class="line">    |- action_types.js</span><br><span class="line">  |- /components</span><br><span class="line">  |- /containers</span><br><span class="line">    |- app.js</span><br><span class="line">  |- /reducers</span><br><span class="line">    |- index.js</span><br><span class="line">  |- index.js</span><br></pre></td></tr></table></figure></p>
+<h3 id="一、-lt-Provider-gt-封装根组件-lt-App-gt"><a href="#一、-lt-Provider-gt-封装根组件-lt-App-gt" class="headerlink" title="一、&lt;Provider&gt; 封装根组件 &lt;App/&gt;"></a>一、<code>&lt;Provider&gt;</code> 封装根组件 <code>&lt;App/&gt;</code></h3><p>使用 <code>react-redux</code> 提供 <code>&lt;Provider&gt;</code> ，它提供 store 属性，并封装应用的根组件 <code>App</code>，所有子组件都可以访问 state。<br><code>src/index.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; render &#125; <span class="keyword">from</span> <span class="string">'react-dom'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; createStore &#125; <span class="keyword">from</span> <span class="string">'redux'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; Provider &#125; <span class="keyword">from</span> <span class="string">'react-redux'</span></span><br><span class="line"><span class="keyword">import</span> App <span class="keyword">from</span> <span class="string">'./containers/App'</span>;</span><br><span class="line"><span class="keyword">import</span> reducer <span class="keyword">from</span> <span class="string">'./reducers'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> store = createStore(reducer);</span><br><span class="line"></span><br><span class="line">render (</span><br><span class="line">  &lt;Provider store=&#123;store&#125;&gt;</span><br><span class="line">    &lt;App/&gt;</span><br><span class="line">  &lt;<span class="regexp">/Provider&gt;,</span></span><br><span class="line"><span class="regexp">  document.getElementById('root')</span></span><br><span class="line"><span class="regexp">)</span></span><br></pre></td></tr></table></figure></p>
+<p>store 由 <code>Redux</code> 提供，它需要 Reducer 作为参数。因此，我们还需要创建 App 和 Reducer。<br>先创建 Reducer，因为项目刚刚创建，我们可以创建一个没有内容的 Reducer。<br><code>reducers/index.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; combineReducers &#125; <span class="keyword">from</span> <span class="string">'redux'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> combineReducers(&#123;&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>其次是 App，可以把它看作是应用的首页，同样可以先建一个没有实际内容的页面。<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> App = <span class="function"><span class="params">()</span> =&gt;</span> (</span><br><span class="line">  &lt;div&gt;</span><br><span class="line">    &lt;h2&gt;hello world&lt;<span class="regexp">/h2&gt;</span></span><br><span class="line"><span class="regexp">  &lt;/</span>div&gt;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> App</span><br></pre></td></tr></table></figure></p>
+<p>这样，一个 React + Redux 应用就可以通过 <code>npm start</code> 运行起来了。你也可以把它看作是一个 boilerplate。</p>
+<h2 id="二、设计-state-的结构"><a href="#二、设计-state-的结构" class="headerlink" title="二、设计 state 的结构"></a>二、设计 state 的结构</h2><p>上一个步骤完成了项目的初始化，在开始真正的开发之前，最好先思考一下整个应用的 state 结构（state shape）。<br>state 的设计可以化整为零，比如以 Container（容器组件）为单位划分，该部分 state 的初始值定义在和 Container 对应的 Reducer 中，该 Reducer 就处理这个部分的 state。<br>以 shopping cart 应用为例，页面展示上需要两个独立的容器组件：</p>
+<ul>
+<li>ProductContainer，用于显示库存商品 products ；</li>
+<li>CartContainer，用于显示购物车的商品；</li>
+</ul>
+<p>因此，state 的结构可以设计如下：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">state = &#123;</span><br><span class="line">  products,</span><br><span class="line">  cart</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>至于 products 和 cart 的数据类型应该是怎样，可以在各自的 Reducer 里在具体定义。</p>
+<h2 id="三、展示组件开发"><a href="#三、展示组件开发" class="headerlink" title="三、展示组件开发"></a>三、展示组件开发</h2><p>步骤一只是搭建了 react/redux 框架，里面并没有我们的数据和 UI，如何把这些呈现出来？<br>在 React/Redux，数据由 Action 提供，它可以是从 api 获取的，也可以是本地的数据。<br>而 UI 部分，React-Redux 将所有组件分成两大类：展示组件（presentational component）和容器组件（container component），分别保存在 <code>components/</code> 和 <code>containers/</code> 两个目录。</p>
+<p>展示组件负责视觉呈现，和 redux 几乎没有联系。如果是复杂的应用，还可以把展示组件分别保存在 <code>components/</code> 和 <code>pages/</code> 两个目录，<code>pages/</code> 对应页面，由 component 按需组合起来。<br>容器组件负责管理数据和业务逻辑，这里的数据并不是直接从 Action 获取，而是从 state 获取，而 Action 和 state 需要通过 Reducer 才能互动。</p>
+<p>因为展示组件和 redux 关系不大，可以先行开发，</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">|- <span class="regexp">/components</span></span><br><span class="line"><span class="regexp">  |- product.js</span></span><br><span class="line"><span class="regexp">  |- product_item.js</span></span><br><span class="line"><span class="regexp">  |- products_list.js</span></span><br><span class="line"><span class="regexp">  |- cart.js</span></span><br></pre></td></tr></table></figure>
+<p>展示组件的开发这里不做介绍，可以直接看源码 <code>[components](https://github.com/chasecs/react-redux-shopping-cart-demo/tree/master/src/components)</code></p>
+<h2 id="四、容器组件开发"><a href="#四、容器组件开发" class="headerlink" title="四、容器组件开发"></a>四、容器组件开发</h2><p>展示组件完成后，要使它和数据产生联系，需要通过容器组件。<br>因为容器组件相对复杂一些，所以不采用 const FuntionName 的方式来创建，使用 class XX extends Component 创建。<br>创建容器组件 <code>products_list_container.js</code>：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; Component &#125; <span class="keyword">from</span> <span class="string">'react'</span></span><br><span class="line"><span class="keyword">import</span> PropTypes <span class="keyword">from</span> <span class="string">'prop-types'</span></span><br><span class="line"><span class="keyword">import</span> ProductsList <span class="keyword">from</span> <span class="string">'../components/products_list'</span>;</span><br><span class="line"><span class="keyword">import</span> ProductItem <span class="keyword">from</span> <span class="string">'../components/product_item'</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProductsListContainer</span> <span class="keyword">extends</span> <span class="title">Component</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> propTypes = &#123;</span><br><span class="line">    products: PropTypes.arrayOf(PropTypes.shape(&#123;</span><br><span class="line">      id: PropTypes.number.isRequired,</span><br><span class="line">      title: PropTypes.string.isRequired,</span><br><span class="line">      price: PropTypes.number.isRequired,</span><br><span class="line">      inventory: PropTypes.number.isRequired</span><br><span class="line">    &#125;)).isRequired,</span><br><span class="line">    addToCart: PropTypes.func.isRequired</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  render()&#123;</span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">      &lt;ProductsList title=<span class="string">"Product List"</span>&gt;</span><br><span class="line">        &#123;products.map( <span class="function"><span class="params">product</span> =&gt;</span></span><br><span class="line">          &lt;ProductItem</span><br><span class="line">            key=&#123;product.id&#125;</span><br><span class="line">            product=&#123;product&#125;</span><br><span class="line">            onAddToCartClicked=&#123;() =&gt; &#123;&#125;&#125;</span><br><span class="line">          /&gt;</span><br><span class="line">        )&#125;</span><br><span class="line">      &lt;<span class="regexp">/ProductsList&gt;</span></span><br><span class="line"><span class="regexp">    )</span></span><br><span class="line"><span class="regexp">  &#125;</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>如果仅仅是上述的代码，<code>ProductsListContainer</code> 仍然只是一个展示组件，把它变为容器组件，你还需要 <code>react-redux</code> 提供的 <code>connect()</code> 方法，所以，在文件最后加上：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">....</span><br><span class="line">ProductsListContainer = connect()(ProductsListContainer);</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> ProductsListContainer;</span><br></pre></td></tr></table></figure></p>
+<p>下一步是往 <code>ProductsListContainer</code> 里面传入 <code>products</code> 数据和 <code>onAddToCartClicked</code> 方法。<br>这里需要的数据是：库存商品数据，因此，可以在 <code>constants/action_types.js</code> 里定义一个 <code>type</code>:<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> SHOW_INVENTORY = <span class="string">'SHOW_INVENTORY'</span></span><br></pre></td></tr></table></figure></p>
+<p>传入数据可以调用 <code>mapStateToProps</code> 方法，把数据传给组件。<br>修改 <code>products_list_container.js</code>, 最终代码如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span></span><br><span class="line"><span class="keyword">import</span> PropTypes <span class="keyword">from</span> <span class="string">'prop-types'</span></span><br><span class="line"><span class="keyword">import</span> ProductsList <span class="keyword">from</span> <span class="string">'../components/products_list'</span>;</span><br><span class="line"><span class="keyword">import</span> Product <span class="keyword">from</span> <span class="string">'../components/product'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; connect &#125; <span class="keyword">from</span> <span class="string">'react-redux'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ProductsContainer =<span class="function">(<span class="params">&#123;products&#125;</span>) =&gt;</span> (</span><br><span class="line">  &lt;ProductsList title=<span class="string">"hehe"</span>&gt;</span><br><span class="line">    &#123;products.map( <span class="function"><span class="params">product</span> =&gt;</span></span><br><span class="line">      &lt;Product</span><br><span class="line">        key=&#123;product.id&#125;</span><br><span class="line">        title=&#123;product.title&#125;</span><br><span class="line">        price=&#123;product.price&#125;</span><br><span class="line">        inventory=&#123;product.inventory&#125;</span><br><span class="line">      /&gt;</span><br><span class="line">    )&#125;</span><br><span class="line">  &lt;<span class="regexp">/ProductsList&gt;</span></span><br><span class="line"><span class="regexp">)</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">const mapStateToProps = () =&gt; (&#123;</span></span><br><span class="line"><span class="regexp">  /</span>* 不规范的代码 BEGIN*<span class="regexp">/</span></span><br><span class="line"><span class="regexp">  products: [</span></span><br><span class="line"><span class="regexp">    &#123;"id": 1, "title": "iPad 4 Mini", "price": 500.01, "inventory": 2&#125;,</span></span><br><span class="line"><span class="regexp">    &#123;"id": 2, "title": "H&amp;M T-Shirt White", "price": 10.99, "inventory": 10&#125;,</span></span><br><span class="line"><span class="regexp">    &#123;"id": 3, "title": "Charli XCX - Sucker CD", "price": 19.99, "inventory": 5&#125;</span></span><br><span class="line"><span class="regexp">  ]</span></span><br><span class="line"><span class="regexp">  /</span>* 不规范的代码是 END*<span class="regexp">/</span></span><br><span class="line"><span class="regexp">&#125;)</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">export default connect(mapStateToProps)(ProductsContainer)</span></span><br></pre></td></tr></table></figure>
+<p>然后在 <code>containers/app.js</code> 修改 <code>&lt;App&gt;</code> 组件，加入 <code>ProductsListContainer</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> ProductsListContainer <span class="keyword">from</span> <span class="string">'./products_list_container'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> App = <span class="function"><span class="params">()</span> =&gt;</span> (</span><br><span class="line">  &lt;div&gt;</span><br><span class="line">    &lt;ProductsListContainer/&gt;</span><br><span class="line">  &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">)</span></span><br></pre></td></tr></table></figure></p>
+<p>再运行一下，就可以在浏览器页面看到商品的列表了。</p>
+<h2 id="五、Action-和-Reducer-处理数据"><a href="#五、Action-和-Reducer-处理数据" class="headerlink" title="五、Action 和 Reducer 处理数据"></a>五、Action 和 Reducer 处理数据</h2><p>正如 <code>ProductsContainer.js</code> 里标注的，<code>mapStateToProps</code> 里的代码是错误的，数据不能直接赋值。正确的做法是，把 Redux 的 store 里保存的 state 输出为组件的 props。<br>不过，store 里的 state 又从哪里获取？<br>按照 Redux 的工作流程，它应该从 Action 和 Reducer 产生。Action 提供原始数据，经过 Reducer 的处理，更新到 state。<br>先在 <code>actions/products_action.js</code> 实现这个 Action：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> types <span class="keyword">from</span> <span class="string">'../constants/action_types'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> showInventory = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">let</span> products = &#123;</span><br><span class="line">    <span class="number">1</span>: &#123;<span class="string">"id"</span>: <span class="number">1</span>, <span class="string">"title"</span>: <span class="string">"iPad 4 Mini"</span>, <span class="string">"price"</span>: <span class="number">500.01</span>, <span class="string">"inventory"</span>: <span class="number">2</span>&#125;,</span><br><span class="line">    <span class="number">2</span>: &#123;<span class="string">"id"</span>: <span class="number">2</span>, <span class="string">"title"</span>: <span class="string">"H&amp;M T-Shirt White"</span>, <span class="string">"price"</span>: <span class="number">10.99</span>, <span class="string">"inventory"</span>: <span class="number">10</span>&#125;,</span><br><span class="line">    <span class="number">3</span>: &#123;<span class="string">"id"</span>: <span class="number">3</span>, <span class="string">"title"</span>: <span class="string">"Charli XCX - Sucker CD"</span>, <span class="string">"price"</span>: <span class="number">19.99</span>, <span class="string">"inventory"</span>: <span class="number">5</span>&#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    type: types.SHOW_INVENTORY,</span><br><span class="line">    products</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>数据要经过 Reducer 才能和 state 产生关联，新建一个 <code>reducers/products_reducer.js</code>：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> types <span class="keyword">from</span> <span class="string">'../constants/action_types'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> initialState = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> productsReducer = <span class="function">(<span class="params">state = initialState, action</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">switch</span> (action.type) &#123;</span><br><span class="line">    <span class="keyword">case</span> types.SHOW_INVENTORY:</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">Object</span>.assign(&#123;&#125;, action.products)</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      <span class="keyword">return</span> state</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> productsReducer</span><br></pre></td></tr></table></figure></p>
+<p>把 <code>productsReducer</code> 添加到 <code>reducers/index.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> products <span class="keyword">from</span> <span class="string">'./products_reducer'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> combineReducers(&#123;</span><br><span class="line">  products: productsReducer</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>现在 Action 已经有了，但是还需要调用 <code>dispatch(action)</code> 这个方法，使用 <code>mapDispatchToProps</code> 方法。如果向 <code>mapDispatchToProps</code> 返回一个对象，它的 key 对应的 value 必须是一个返回 Action 对象的函数，调用该函数时，返回的 Action 会由 Redux 自动 <code>dispatch</code>。<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; showInventory, addToCart &#125; <span class="keyword">from</span> <span class="string">'../actions/products_action'</span>;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">const</span> mapDispatchToProps = &#123;</span><br><span class="line">  showInventory,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> connect(</span><br><span class="line">  mapStateToProps,</span><br><span class="line">  mapDispatchToProps</span><br><span class="line">)(ProductsListContainer)</span><br></pre></td></tr></table></figure></p>
+<p><code>showInventory</code> 方法就可以在 <code>ProductsListContainer</code> 通过 <code>this.props</code> 来访问<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">componentDidMount() &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; showInventory &#125; = <span class="keyword">this</span>.props;</span><br><span class="line">  showInventory()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这一步也类似于现实应用中向api请求数据。<br><code>showInventory()</code> 调用成功后，store 中的 state 就已经更新了。容器组件就可以通过 <code>mapStateToProps</code> 获取 state 并映射到 props。<br>因为 <code>state.products</code> 的格式不是和展示组件要求的格式不太一样，所以我们要用 <code>parseProducts</code> 转换一下：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> parseProducts = <span class="function">(<span class="params">products</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">let</span> mappedProducts = []</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">let</span> key <span class="keyword">in</span> products)&#123;</span><br><span class="line">    mappedProducts.push(products[key])</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> mappedProducts</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> mapStateToProps = <span class="function">(<span class="params">state</span>) =&gt;</span> (</span><br><span class="line">  &#123;<span class="attr">products</span>: parseProducts(state.products)&#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<p>同样，最终的 <code>products</code> 可以在 <code>ProductsListContainer</code> 通过 <code>this.props</code> 来访问，<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">render()&#123;</span><br><span class="line">  <span class="keyword">const</span> &#123;products&#125; = <span class="keyword">this</span>.props;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ProductsList title=<span class="string">"Product List"</span>&gt;</span><br><span class="line">      &#123;products.map( <span class="function"><span class="params">product</span> =&gt;</span></span><br><span class="line">        &lt;ProductItem</span><br><span class="line">          key=&#123;product.id&#125;</span><br><span class="line">          product=&#123;product&#125;</span><br><span class="line">          onAddToCartClicked=&#123;() =&gt; &#123;&#125;&#125;</span><br><span class="line">        /&gt;</span><br><span class="line">      )&#125;</span><br><span class="line">    &lt;<span class="regexp">/ProductsList&gt;</span></span><br><span class="line"><span class="regexp">  )</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>再运行一下，就可以在浏览器页面看到商品的列表了。至此，这个应用已经是一个完整地运用 redux 的 Action，Reducer，Store。</p>
+<h2 id="六、实现交互操作"><a href="#六、实现交互操作" class="headerlink" title="六、实现交互操作"></a>六、实现交互操作</h2><p>迄今为止，我们的应用只是展示了商品，作为一个购物车应用，还需要增加交互操作。下来将实现 addToCart 按钮的功能。<br>在 Redux 的工作流程里，一个引发 state 变化的 function，必须是一次 dispatch(Action)。<br>先不考虑购物车 <code>CartContainer</code> 的情况，对于 <code>ProductsContainer</code> 这个容器组件，每点击一下，库存数量就应该减少一个。  </p>
+<p>实现 <code>ADD_TO_CART</code> 的 Action：<br><code>constants/action_types.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> ADD_TO_CART = <span class="string">'ADD_TO_CART'</span></span><br></pre></td></tr></table></figure></p>
+<p><code>actions/products_action.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> addToCart = <span class="function"><span class="params">productId</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> (&#123;</span><br><span class="line">    type: types.ADD_TO_CART,</span><br><span class="line">    productId</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在 Reducer 实现对应的方法，修改 <code>reducers/products_reducer.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> decreaseInventory = <span class="function">(<span class="params">product</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    ...product,</span><br><span class="line">    inventory: product.inventory - <span class="number">1</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> productsReducer = <span class="function">(<span class="params">state = initialState, action</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">switch</span> (action.type) &#123;</span><br><span class="line">    <span class="keyword">case</span> types.SHOW_INVENTORY:</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">Object</span>.assign(&#123;&#125;, action.products)</span><br><span class="line">    <span class="keyword">case</span> types.ADD_TO_CART:</span><br><span class="line">      <span class="keyword">const</span> &#123; productId &#125; = action</span><br><span class="line">      <span class="keyword">return</span> &#123;</span><br><span class="line">        ...state,</span><br><span class="line">        [productId]: decreaseInventory(state[productId])</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      <span class="keyword">return</span> state</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>修改 <code>products_list_container.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">render()&#123;</span><br><span class="line">  <span class="keyword">const</span> &#123;products, addToCart&#125; = <span class="keyword">this</span>.props;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ProductsList title=<span class="string">"Product List"</span>&gt;</span><br><span class="line">      &#123;products.map( <span class="function"><span class="params">product</span> =&gt;</span></span><br><span class="line">        &lt;ProductItem</span><br><span class="line">          key=&#123;product.id&#125;</span><br><span class="line">          product=&#123;product&#125;</span><br><span class="line">          onAddToCartClicked=&#123;() =&gt; addToCart(product.id)&#125;</span><br><span class="line">        /&gt;</span><br><span class="line">      )&#125;</span><br><span class="line">    &lt;<span class="regexp">/ProductsList&gt;</span></span><br><span class="line"><span class="regexp">  )</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">...</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">const mapDispatchToProps = &#123;</span></span><br><span class="line"><span class="regexp">  showInventory,</span></span><br><span class="line"><span class="regexp">  addToCart</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>这样，<code>ProductsContainer</code> 的 <code>addToCart</code> 功能就已经实现了，每点击一次，对应商品的数量就会减少一个。</p>
+<h2 id="一个-Action-引发多个-Reducer"><a href="#一个-Action-引发多个-Reducer" class="headerlink" title="一个 Action 引发多个 Reducer"></a>一个 Action 引发多个 Reducer</h2><p>在商品列表中，点击 “Add to Cart” 按钮之后，发生的变化不仅是库存减少，还有购物车物品增多、购物金额变化。<br>因为库存和购物车被划分在不同的 Reducer 里，所以就会出现一个 Action 触发两个 Reducer 的情况。<br>实现 <code>reducers/cart_reducer.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> types <span class="keyword">from</span> <span class="string">'../constants/action_types'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> initialState = &#123;</span><br><span class="line">  addedIds: [],</span><br><span class="line">  quantityById: &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> addProduct = <span class="function">(<span class="params">state = initialState.addedIds, productId</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span>(state.indexOf(productId) === <span class="number">-1</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> [...state, productId]</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> state</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> addQuantity = <span class="function">(<span class="params">state = initialState.quantityById, productId</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    ...state,</span><br><span class="line">    [productId]: (state[productId] || <span class="number">0</span>) + <span class="number">1</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> cartReducer = <span class="function">(<span class="params">state = initialState, action</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">switch</span> (action.type) &#123;</span><br><span class="line">    <span class="keyword">case</span> types.ADD_TO_CART:</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">Object</span>.assign(&#123;&#125;, state, &#123;</span><br><span class="line">        addedIds: addProduct(state.addedIds, action.productId),</span><br><span class="line">        quantityById: addQuantity(state.quantityById, action.productId)</span><br><span class="line">      &#125;)</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      <span class="keyword">return</span> state</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> cart</span><br></pre></td></tr></table></figure></p>
+<p>将 <code>cartReducer</code> 加入 <code>reducers/index.js</code><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">....</span><br><span class="line">+<span class="keyword">import</span> cartReducer <span class="keyword">from</span> <span class="string">'./cart_reducer'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> combineReducers(&#123;</span><br><span class="line">  ...</span><br><span class="line">+  cart: cartReducer</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>实现 <code>CartContainer</code>,<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; Component&#125; <span class="keyword">from</span> <span class="string">'react'</span></span><br><span class="line"><span class="keyword">import</span> PropTypes <span class="keyword">from</span> <span class="string">'prop-types'</span></span><br><span class="line"><span class="keyword">import</span> Cart <span class="keyword">from</span> <span class="string">'../components/cart'</span></span><br><span class="line"><span class="keyword">import</span> &#123; connect &#125; <span class="keyword">from</span> <span class="string">'react-redux'</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CartContainer</span> <span class="keyword">extends</span> <span class="title">Component</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  render()&#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; products, total &#125; = <span class="keyword">this</span>.props;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span>(</span><br><span class="line">      &lt;Cart</span><br><span class="line">        products=&#123;products&#125;</span><br><span class="line">        total=&#123;total&#125;</span><br><span class="line">        onCheckoutClicked=&#123;() =&gt; alert(<span class="string">'checkout'</span>)&#125;</span><br><span class="line">      /&gt;</span><br><span class="line">    )</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> productsInCart = <span class="function">(<span class="params">state</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; products, cart &#125; = state;</span><br><span class="line">  <span class="keyword">let</span> result = [];</span><br><span class="line">  <span class="keyword">let</span> total = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span>(<span class="keyword">let</span> id <span class="keyword">in</span> cart.quantityById)&#123;</span><br><span class="line">    result.push(&#123;</span><br><span class="line">      ...products[id],</span><br><span class="line">      quantity:cart.quantityById[id]</span><br><span class="line">    &#125;);</span><br><span class="line">    total += products[id].price * cart.quantityById[id]</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    products: result,</span><br><span class="line">    total: total.toFixed(<span class="number">2</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> mapStateToProps = <span class="function">(<span class="params">state</span>) =&gt;</span> productsInCart(state)</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> connect(</span><br><span class="line">  mapStateToProps,</span><br><span class="line">)(CartContainer)</span><br></pre></td></tr></table></figure></p>
+<p>其中 <code>productsInCart</code> 方法用于解析 state 中的购物车数据，输出我们需要的格式，从而在组件中渲染出来。<br>至此，点击 “add to cart” 按钮之后，会同时发生库存减少、购物车商品数量、金额变化，最基本的购物车 demo 就已经完成。</p>
+<p>当然，目前这个购物车是十分简陋的，如果想继续利用它来熟悉 Redux 或者 React，还有许多可以开发的方向，比如：减少购物车商品数量，购物车商品可选、全选，加入 React-Router，页面样式…</p>
+<p>(完)</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li><a href="http://redux.js.org/" target="_blank" rel="noopener">Read Me · Redux</a></li>
+<li><a href="https://github.com/reactjs/react-redux/blob/master/docs/api.md#api" target="_blank" rel="noopener">react-redux API</a></li>
+<li><a href="https://github.com/reactjs/redux/tree/master/examples/shopping-cart" target="_blank" rel="noopener">shopping-cart</a></li>
+<li><a href="https://github.com/tj/frontend-boilerplate" target="_blank" rel="noopener">tj/frontend-boilerplate</a></li>
+<li><a href="http://www.ruanyifeng.com/blog/2016/09/redux_tutorial_part_three_react-redux.html" target="_blank" rel="noopener">Redux 入门教程（三）：React-Redux 的用法</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/12/2017-08-09-react_native_packing_native_module_for_android_n_ios/" rel="next" title="React Native 原生模块库打包指南">
+                <i class="fa fa-chevron-left"></i> React Native 原生模块库打包指南
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/12/2017-09-26-gitolite-installation-and-setup-on-ubuntu-16-04-lts/" rel="prev" title="在 ubuntu 搭建基于 Gitolite 的 Git 服务器">
+                在 ubuntu 搭建基于 Gitolite 的 Git 服务器 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ttimehc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#零、-react-redux-目录结构"><span class="nav-number">1.</span> <span class="nav-text">零、 react-redux 目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、-lt-Provider-gt-封装根组件-lt-App-gt"><span class="nav-number">1.1.</span> <span class="nav-text">一、&lt;Provider&gt; 封装根组件 &lt;App/&gt;</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、设计-state-的结构"><span class="nav-number">2.</span> <span class="nav-text">二、设计 state 的结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、展示组件开发"><span class="nav-number">3.</span> <span class="nav-text">三、展示组件开发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、容器组件开发"><span class="nav-number">4.</span> <span class="nav-text">四、容器组件开发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、Action-和-Reducer-处理数据"><span class="nav-number">5.</span> <span class="nav-text">五、Action 和 Reducer 处理数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六、实现交互操作"><span class="nav-number">6.</span> <span class="nav-text">六、实现交互操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个-Action-引发多个-Reducer"><span class="nav-number">7.</span> <span class="nav-text">一个 Action 引发多个 Reducer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">7.1.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ttimehc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
