@@ -99,11 +99,11 @@
   <meta name="description" content="Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。   本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用...">
 <meta property="og:type" content="article">
 <meta property="og:title" content="React + Redux 应用的开发流程，以购物车为例">
-<meta property="og:url" content="https://chasecs.github.io/2019/04/12/2017-09-02-react-redux-shopping-cart-demo/index.html">
+<meta property="og:url" content="https://chasecs.github.io/2017/09/02/2017-09-02-react-redux-shopping-cart-demo/index.html">
 <meta property="og:site_name" content="编程日志">
 <meta property="og:description" content="Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。   本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用...">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-08-08T14:31:28.501Z">
+<meta property="og:updated_time" content="2019-08-09T02:57:32.783Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="React + Redux 应用的开发流程，以购物车为例">
 <meta name="twitter:description" content="Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。   本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用...">
@@ -114,7 +114,7 @@
 
   
   
-  <link rel="canonical" href="https://chasecs.github.io/2019/04/12/2017-09-02-react-redux-shopping-cart-demo/">
+  <link rel="canonical" href="https://chasecs.github.io/2017/09/02/2017-09-02-react-redux-shopping-cart-demo/">
 
 
 
@@ -313,7 +313,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/04/12/2017-09-02-react-redux-shopping-cart-demo/">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2017/09/02/2017-09-02-react-redux-shopping-cart-demo/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ttimehc">
@@ -356,7 +356,7 @@
                 
               
 
-              <time title="创建时间：2019-04-12 00:42:11" itemprop="dateCreated datePublished" datetime="2019-04-12T00:42:11+08:00">2019-04-12</time>
+              <time title="创建时间：2017-09-02 00:00:00" itemprop="dateCreated datePublished" datetime="2017-09-02T00:00:00+08:00">2017-09-02</time>
             
 
             
@@ -373,7 +373,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-08-08 22:31:28" itemprop="dateModified" datetime="2019-08-08T22:31:28+08:00">2019-08-08</time>
+                <time title="修改时间：2019-08-09 10:57:32" itemprop="dateModified" datetime="2019-08-09T10:57:32+08:00">2019-08-09</time>
               
             
           </span>
@@ -400,19 +400,6 @@
 
           
             
-            
-              
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-            
-                <span class="post-meta-item-text">评论数：</span>
-                <a href="/2019/04/12/2017-09-02-react-redux-shopping-cart-demo/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count gitment-comments-count" data-xid="/2019/04/12/2017-09-02-react-redux-shopping-cart-demo/" itemprop="commentCount"></span>
-                </a>
-              </span>
             
           
 
@@ -524,7 +511,7 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/04/12/2017-08-09-react_native_packing_native_module_for_android_n_ios/" rel="next" title="React Native 原生模块库打包指南">
+              <a href="/2017/08/09/2017-08-09-react_native_packing_native_module_for_android_n_ios/" rel="next" title="React Native 原生模块库打包指南">
                 <i class="fa fa-chevron-left"></i> React Native 原生模块库打包指南
               </a>
             
@@ -534,7 +521,7 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/04/12/2017-09-26-gitolite-installation-and-setup-on-ubuntu-16-04-lts/" rel="prev" title="在 ubuntu 搭建基于 Gitolite 的 Git 服务器">
+              <a href="/2017/09/26/2017-09-26-gitolite-installation-and-setup-on-ubuntu-16-04-lts/" rel="prev" title="在 ubuntu 搭建基于 Gitolite 的 Git 服务器">
                 在 ubuntu 搭建基于 Gitolite 的 Git 服务器 <i class="fa fa-chevron-right"></i>
               </a>
             
@@ -559,10 +546,7 @@
           
 
   
-    <div class="comments" id="comments">
-      
-        <div id="gitment-container"></div>
-      
+    <div class="comments" id="gitalk-container">
     </div>
 
   
@@ -859,37 +843,32 @@
 
 
   
-    <!-- LOCAL: You can save these files to your site and update links -->
+    
 
-  
-  <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitmint.browser.js"></script>
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.css">
-<!-- END LOCAL -->
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
 
 <script>
-  function renderGitment() {
-    var gitment = new Gitmint({
-      id: window.location.pathname,
-      owner: 'chasecs',
-      repo: 'chasecs.github.io',
-      
-        lang: '' || navigator.language || navigator.systemLanguage || navigator.userLanguage,
-      
-      oauth: {
-      
-      
-        client_secret: '054b7811c14e27f869e637afd14f6f380fa632c1',
-      
-        client_id: 'eb2224abc6c383a0371e'
-      }
-    });
-    gitment.render('gitment-container');
-  }
-
-  
-    renderGitment();
-  
+  var gitalk = new Gitalk({
+    clientID: 'eb2224abc6c383a0371e',
+    clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+    repo: 'chasecs.github.io',
+    owner: 'chasecs',
+    admin: ['chasecs'],
+    id: md5(location.pathname),
+    
+      language: 'en, zh-CN',
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
 </script>
 
   
