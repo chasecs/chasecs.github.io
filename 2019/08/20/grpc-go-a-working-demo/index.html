@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter 一、基础知识rpcRPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。 gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 RPC。 pro">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gRPC Demo，如何用 go 开发 grpc 服务端&#x2F;客户端应用">
+<meta property="og:url" content="https://chasecs.github.io/2019/08/20/grpc-go-a-working-demo/index.html">
+<meta property="og:site_name" content="编程日志">
+<meta property="og:description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter 一、基础知识rpcRPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。 gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 RPC。 pro">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-08-20T08:27:39.860Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="gRPC Demo，如何用 go 开发 grpc 服务端&#x2F;客户端应用">
+<meta name="twitter:description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter 一、基础知识rpcRPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。 gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 RPC。 pro">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://chasecs.github.io/2019/08/20/grpc-go-a-working-demo/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>gRPC Demo，如何用 go 开发 grpc 服务端/客户端应用 | 编程日志</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">编程日志</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/chasecs" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/08/20/grpc-go-a-working-demo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程日志">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">gRPC Demo，如何用 go 开发 grpc 服务端/客户端应用
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-20 14:37:37 / 修改时间：16:27:39" itemprop="dateCreated datePublished" datetime="2019-08-20T14:37:37+08:00">2019-08-20</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>demo 的代码仓库：<a href="https://github.com/chasecs/grpc-sorter" target="_blank" rel="noopener">github.com/chasecs/grpc-sorter</a></p>
+<h2 id="一、基础知识"><a href="#一、基础知识" class="headerlink" title="一、基础知识"></a>一、基础知识</h2><h3 id="rpc"><a href="#rpc" class="headerlink" title="rpc"></a>rpc</h3><p>RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。</p>
+<p>gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 <a href="https://github.com/astaxie/build-web-application-with-golang/blob/master/zh/08.4.md" target="_blank" rel="noopener">RPC</a>。</p>
+<h3 id="protocal-buffers"><a href="#protocal-buffers" class="headerlink" title="protocal buffers"></a>protocal buffers</h3><p>gRPC 最大的特点是使用 protocal buffers ，简称 protobuf。 protobuf 是 google 开源的一种交换数据机制，有些类似 XML 、JSON，但多了定义远程方法等内容。</p>
+<p>gRPC 开发的第一项工作就是先写 .proto 文件，然后用 protoc 编译器生成相应的代码，供 gPRC 的服务端和客户端调用。protobuf 跟语言无关，它可以生成不同语言的代码，供不同语言的项目使用。</p>
+<p>因为 protocbuf 是 gRPC 开发的必备知识，所以事先有必要了解它的基本语法，入门教程见官网：<a href="https://developers.google.com/protocol-buffers/docs/overview" target="_blank" rel="noopener">protocol buffers</a></p>
+<h2 id="二、用-go-开发一个-gRPC-demo"><a href="#二、用-go-开发一个-gRPC-demo" class="headerlink" title="二、用 go 开发一个 gRPC demo"></a>二、用 go 开发一个 gRPC demo</h2><p>这个 demo 里将开发一个提供快速排序接口的服务端，以及一个发出排序请求的客户端，排序算法的实现部分在服务端实现，两者之间通过 gPRC 通讯。</p>
+<h3 id="1-配置开发环境"><a href="#1-配置开发环境" class="headerlink" title="1. 配置开发环境"></a>1. 配置开发环境</h3><p>安装 gRPC-go，<a href="https://grpc.io/docs/quickstart/go/" target="_blank" rel="noopener">国内方法</a></p>
+<p>安装 protocol buffer <a href="https://medium.com/@erika_dike/installing-the-protobuf-compiler-on-a-mac-a0d397af46b8" target="_blank" rel="noopener">方法</a></p>
+<p>项目目录</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">grpc-sorter</span><br><span class="line">|</span><br><span class="line">├── protobuf // 存放 protobuf 生成的 go 代码</span><br><span class="line">|   └── sorter</span><br><span class="line">├── sorter_server // 服务端项目目录</span><br><span class="line">├── sorter_client // 客户端项目目录</span><br><span class="line">└── sorter.proto</span><br></pre></td></tr></table></figure>
+<h3 id="2-编写-sorter-proto-文件"><a href="#2-编写-sorter-proto-文件" class="headerlink" title="2. 编写 sorter.proto 文件"></a>2. 编写 <code>sorter.proto</code> 文件</h3><p><code>sorter.proto</code> 如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">syntax = &quot;proto3&quot;;</span><br><span class="line">package sorter;</span><br><span class="line"></span><br><span class="line">message Numbers &#123;</span><br><span class="line">  repeated int64  numbers = 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">service Sorter &#123;</span><br><span class="line">  rpc QuickSort(Numbers) returns (Numbers) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用 protoc 命令生成 go 代码到 <code>protobuf/sorter</code> 目录：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">protoc --go_out=plugins=grpc:protobuf/sorter sorter.proto</span><br></pre></td></tr></table></figure>
+<h3 id="3-实现服务端代码"><a href="#3-实现服务端代码" class="headerlink" title="3. 实现服务端代码"></a>3. 实现服务端代码</h3><p><code>sorter_server/server.go</code> 主要代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	port = <span class="string">":50051"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> server <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *server)</span> <span class="title">QuickSort</span><span class="params">(ctx context.Context, in *pb.Numbers)</span> <span class="params">(*pb.Numbers, error)</span></span> &#123;</span><br><span class="line">	qsort.QuickSort(in.Numbers)</span><br><span class="line">	<span class="keyword">return</span> in, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	lis, _ := net.Listen(<span class="string">"tcp"</span>, port)</span><br><span class="line">	s := grpc.NewServer()</span><br><span class="line">	pb.RegisterSorterServer(s, &amp;server&#123;&#125;)</span><br><span class="line">	<span class="keyword">if</span> err := s.Serve(lis); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"failed to serve: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>完整的服务端代码见：<a href="https://github.com/chasecs/grpc-sorter/tree/master/sorter_server" target="_blank" rel="noopener">github 仓库</a></p>
+<h3 id="4-客户端开发"><a href="#4-客户端开发" class="headerlink" title="4. 客户端开发"></a>4. 客户端开发</h3><p><code>sorter_client/main.go</code> 主要代码:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"golang.org/x/net/context"</span></span><br><span class="line">	<span class="string">"google.golang.org/grpc"</span></span><br><span class="line">	pb <span class="string">"grpc-sorter/protobuf/sorter"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> conn *grpc.ClientConn</span><br><span class="line">	conn, err := grpc.Dial(<span class="string">":50051"</span>, grpc.WithInsecure())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"did not connect: %s"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line">	c := pb.NewSorterClient(conn)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> raw = []<span class="keyword">int64</span>&#123;<span class="number">1</span>, <span class="number">8</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">6</span>&#125;</span><br><span class="line">	response, err := c.QuickSort(context.Background(), &amp;pb.Numbers&#123;Numbers: raw&#125;)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Error when calling QuickSort: %s"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Printf(<span class="string">"Response from server: %v"</span>, response.Numbers)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>至此，这组 grpc 即开发完成。</p>
+<h3 id="5-运行"><a href="#5-运行" class="headerlink" title="5. 运行"></a>5. 运行</h3><p>先运行服务端</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go run sorter_server/server.go</span><br></pre></td></tr></table></figure>
+<p>再运行客户端就会输出排序结果:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go run sorter_client/main.go </span><br><span class="line">...Response from server: [1 3 5 6 8]</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/19/golang-channel-buffered-or-unbuffered/" rel="next" title="【go】channel 的 buffered 与 unbuffered">
+                <i class="fa fa-chevron-left"></i> 【go】channel 的 buffered 与 unbuffered
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ttimehc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                    <span class="site-state-item-count">1</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/chasecs" title="GitHub &rarr; https://github.com/chasecs" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:ttimehc@gmail.com" title="E-Mail &rarr; mailto:ttimehc@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、基础知识"><span class="nav-number">1.</span> <span class="nav-text">一、基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#rpc"><span class="nav-number">1.1.</span> <span class="nav-text">rpc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#protocal-buffers"><span class="nav-number">1.2.</span> <span class="nav-text">protocal buffers</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、用-go-开发一个-gRPC-demo"><span class="nav-number">2.</span> <span class="nav-text">二、用 go 开发一个 gRPC demo</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-配置开发环境"><span class="nav-number">2.1.</span> <span class="nav-text">1. 配置开发环境</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-编写-sorter-proto-文件"><span class="nav-number">2.2.</span> <span class="nav-text">2. 编写 sorter.proto 文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-实现服务端代码"><span class="nav-number">2.3.</span> <span class="nav-text">3. 实现服务端代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-客户端开发"><span class="nav-number">2.4.</span> <span class="nav-text">4. 客户端开发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-运行"><span class="nav-number">2.5.</span> <span class="nav-text">5. 运行</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ttimehc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'eb2224abc6c383a0371e',
+    clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+    repo: 'chasecs.github.io',
+    owner: 'chasecs',
+    admin: ['chasecs'],
+    id: md5(location.pathname),
+    
+      language: 'en, zh-CN',
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

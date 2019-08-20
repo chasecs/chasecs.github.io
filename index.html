@@ -310,6 +310,191 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/08/20/grpc-go-a-working-demo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程日志">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/20/grpc-go-a-working-demo/" class="post-title-link" itemprop="url">gRPC Demo，如何用 go 开发 grpc 服务端/客户端应用</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-20 14:37:37 / 修改时间：16:27:39" itemprop="dateCreated datePublished" datetime="2019-08-20T14:37:37+08:00">2019-08-20</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>demo 的代码仓库：<a href="https://github.com/chasecs/grpc-sorter" target="_blank" rel="noopener">github.com/chasecs/grpc-sorter</a></p>
+<h2 id="一、基础知识"><a href="#一、基础知识" class="headerlink" title="一、基础知识"></a>一、基础知识</h2><h3 id="rpc"><a href="#rpc" class="headerlink" title="rpc"></a>rpc</h3><p>RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。</p>
+<p>gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 <a href="https://github.com/astaxie/build-web-application-with-golang/blob/master/zh/08.4.md" target="_blank" rel="noopener">RPC</a>。</p>
+<h3 id="protocal-buffers"><a href="#protocal-buffers" class="headerlink" title="protocal buffers"></a>protocal buffers</h3><p>gRPC 最大的特点是使用 protocal buffers ，简称 protobuf。 protobuf 是 google 开源的一种交换数据机制，有些类似 XML 、JSON，但多了定义远程方法等内容。</p>
+<p>gRPC 开发的第一项工作就是先写 .proto 文件，然后用 protoc 编译器生成相应的代码，供 gPRC 的服务端和客户端调用。protobuf 跟语言无关，它可以生成不同语言的代码，供不同语言的项目使用。</p>
+<p>因为 protocbuf 是 gRPC 开发的必备知识，所以事先有必要了解它的基本语法，入门教程见官网：<a href="https://developers.google.com/protocol-buffers/docs/overview" target="_blank" rel="noopener">protocol buffers</a></p>
+<h2 id="二、用-go-开发一个-gRPC-demo"><a href="#二、用-go-开发一个-gRPC-demo" class="headerlink" title="二、用 go 开发一个 gRPC demo"></a>二、用 go 开发一个 gRPC demo</h2><p>这个 demo 里将开发一个提供快速排序接口的服务端，以及一个发出排序请求的客户端，排序算法的实现部分在服务端实现，两者之间通过 gPRC 通讯。</p>
+<h3 id="1-配置开发环境"><a href="#1-配置开发环境" class="headerlink" title="1. 配置开发环境"></a>1. 配置开发环境</h3><p>安装 gRPC-go，<a href="https://grpc.io/docs/quickstart/go/" target="_blank" rel="noopener">国内方法</a></p>
+<p>安装 protocol buffer <a href="https://medium.com/@erika_dike/installing-the-protobuf-compiler-on-a-mac-a0d397af46b8" target="_blank" rel="noopener">方法</a></p>
+<p>项目目录</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">grpc-sorter</span><br><span class="line">|</span><br><span class="line">├── protobuf // 存放 protobuf 生成的 go 代码</span><br><span class="line">|   └── sorter</span><br><span class="line">├── sorter_server // 服务端项目目录</span><br><span class="line">├── sorter_client // 客户端项目目录</span><br><span class="line">└── sorter.proto</span><br></pre></td></tr></table></figure>
+<h3 id="2-编写-sorter-proto-文件"><a href="#2-编写-sorter-proto-文件" class="headerlink" title="2. 编写 sorter.proto 文件"></a>2. 编写 <code>sorter.proto</code> 文件</h3><p><code>sorter.proto</code> 如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">syntax = &quot;proto3&quot;;</span><br><span class="line">package sorter;</span><br><span class="line"></span><br><span class="line">message Numbers &#123;</span><br><span class="line">  repeated int64  numbers = 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">service Sorter &#123;</span><br><span class="line">  rpc QuickSort(Numbers) returns (Numbers) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用 protoc 命令生成 go 代码到 <code>protobuf/sorter</code> 目录：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">protoc --go_out=plugins=grpc:protobuf/sorter sorter.proto</span><br></pre></td></tr></table></figure>
+<h3 id="3-实现服务端代码"><a href="#3-实现服务端代码" class="headerlink" title="3. 实现服务端代码"></a>3. 实现服务端代码</h3><p><code>sorter_server/server.go</code> 主要代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	port = <span class="string">":50051"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> server <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *server)</span> <span class="title">QuickSort</span><span class="params">(ctx context.Context, in *pb.Numbers)</span> <span class="params">(*pb.Numbers, error)</span></span> &#123;</span><br><span class="line">	qsort.QuickSort(in.Numbers)</span><br><span class="line">	<span class="keyword">return</span> in, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	lis, _ := net.Listen(<span class="string">"tcp"</span>, port)</span><br><span class="line">	s := grpc.NewServer()</span><br><span class="line">	pb.RegisterSorterServer(s, &amp;server&#123;&#125;)</span><br><span class="line">	<span class="keyword">if</span> err := s.Serve(lis); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"failed to serve: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>完整的服务端代码见：<a href="https://github.com/chasecs/grpc-sorter/tree/master/sorter_server" target="_blank" rel="noopener">github 仓库</a></p>
+<h3 id="4-客户端开发"><a href="#4-客户端开发" class="headerlink" title="4. 客户端开发"></a>4. 客户端开发</h3><p><code>sorter_client/main.go</code> 主要代码:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"golang.org/x/net/context"</span></span><br><span class="line">	<span class="string">"google.golang.org/grpc"</span></span><br><span class="line">	pb <span class="string">"grpc-sorter/protobuf/sorter"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> conn *grpc.ClientConn</span><br><span class="line">	conn, err := grpc.Dial(<span class="string">":50051"</span>, grpc.WithInsecure())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"did not connect: %s"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line">	c := pb.NewSorterClient(conn)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> raw = []<span class="keyword">int64</span>&#123;<span class="number">1</span>, <span class="number">8</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">6</span>&#125;</span><br><span class="line">	response, err := c.QuickSort(context.Background(), &amp;pb.Numbers&#123;Numbers: raw&#125;)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Error when calling QuickSort: %s"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Printf(<span class="string">"Response from server: %v"</span>, response.Numbers)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>至此，这组 grpc 即开发完成。</p>
+<h3 id="5-运行"><a href="#5-运行" class="headerlink" title="5. 运行"></a>5. 运行</h3><p>先运行服务端</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go run sorter_server/server.go</span><br></pre></td></tr></table></figure>
+<p>再运行客户端就会输出排序结果:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go run sorter_client/main.go </span><br><span class="line">...Response from server: [1 3 5 6 8]</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/08/19/golang-channel-buffered-or-unbuffered/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -355,7 +540,7 @@
                 
               
 
-              <time title="创建时间：2019-08-19 01:23:29 / 修改时间：02:53:49" itemprop="dateCreated datePublished" datetime="2019-08-19T01:23:29+08:00">2019-08-19</time>
+              <time title="创建时间：2019-08-19 01:23:29 / 修改时间：14:36:20" itemprop="dateCreated datePublished" datetime="2019-08-19T01:23:29+08:00">2019-08-19</time>
             
 
             
@@ -416,13 +601,13 @@
           
             <p>go 通过 goroutine 实现并发，而不同的 goroutine 之间需要通过 channel 来通讯，否则就是两段各行其是的代码。</p>
 <h2 id="channel-解决-goroutine-的通讯"><a href="#channel-解决-goroutine-的通讯" class="headerlink" title="channel 解决 goroutine 的通讯"></a>channel 解决 goroutine 的通讯</h2><p>看一个 <a href="https://play.golang.org/p/5cvtWy36o8b" target="_blank" rel="noopener">code</a></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    </span><br><span class="line">    go func()&#123;</span><br><span class="line">      fmt.Println(&quot;I&apos;m gotoutine&quot;) //不会执行</span><br><span class="line">    &#125;()</span><br><span class="line">    fmt.Println(&quot;bye&quot;)</span><br><span class="line">&#125;</span><br><span class="line">//bye</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>&#123;</span><br><span class="line">      fmt.Println(<span class="string">"I'm gotoutine"</span>) <span class="comment">//不会执行</span></span><br><span class="line">    &#125;()</span><br><span class="line">    fmt.Println(<span class="string">"bye"</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//bye</span></span><br></pre></td></tr></table></figure>
 <p>这里的 goroutine 最终不会打印信息，原因是 main （也是一个 goroutine）不会去管另一个 goroutine 的情况，只顾把自己部分执行完。main 结束后，整个程序也就结束了。</p>
 <p>解决这个问题的办法，就是利用 channel 来传递消息，告诉 main 另一个 goroutine 什么时候结束。</p>
 <p> <a href="https://play.golang.org/p/g9u4Z46tgz2" target="_blank" rel="noopener">code</a></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    c := make(chan int)</span><br><span class="line">    go func()&#123;</span><br><span class="line">      fmt.Println(&quot;I&apos;m gotoutine&quot;)</span><br><span class="line">      c &lt;- 1</span><br><span class="line">    &#125;()</span><br><span class="line">    fmt.Println(&quot;bye&quot;, &lt;-c)</span><br><span class="line">    fmt.Println(&quot;main&quot;)</span><br><span class="line">&#125;</span><br><span class="line">//I&apos;m gotoutine</span><br><span class="line">//bye 1</span><br><span class="line">//main</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>&#123;</span><br><span class="line">      fmt.Println(<span class="string">"I'm gotoutine"</span>)</span><br><span class="line">      c &lt;- <span class="number">1</span></span><br><span class="line">    &#125;()</span><br><span class="line">    fmt.Println(<span class="string">"bye"</span>, &lt;-c)</span><br><span class="line">    fmt.Println(<span class="string">"main"</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//I'm gotoutine</span></span><br><span class="line"><span class="comment">//bye 1</span></span><br><span class="line"><span class="comment">//main</span></span><br></pre></td></tr></table></figure>
 <h2 id="buffered-VS-unbuffered"><a href="#buffered-VS-unbuffered" class="headerlink" title="buffered VS unbuffered"></a>buffered VS unbuffered</h2><p>channel 在初始化时可以设置为 unbuffered 或 buffered ：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ci := make(chan int)            // unbuffered channel of integers</span><br><span class="line">cj := make(chan int, 0)         // unbuffered channel of integers</span><br><span class="line">cs := make(chan int, 100)       // buffered channel of integers</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ci := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)            <span class="comment">// unbuffered channel of integers</span></span><br><span class="line">cj := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>, <span class="number">0</span>)         <span class="comment">// unbuffered channel of integers</span></span><br><span class="line">cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>, <span class="number">100</span>)       <span class="comment">// buffered channel of integers</span></span><br></pre></td></tr></table></figure>
 <p>channel 的阻塞功能（block）和它是否为 buffered 有很大关系。</p>
 <p>阻塞是指暂停执行下一段代码，等待得到新的通知后再继续执行。它会在不同的情况出现：</p>
 <ul>
@@ -433,10 +618,10 @@
 <li>发出端引发阻塞的时机与 channel 是否为 buffered 有关</li>
 </ul>
 <p><strong>如果 channel 是 unbuffered  ，它的发出端会引发阻塞</strong><br>，如下面代码（<a href="https://play.golang.org/p/-VeBs3jcmN7]" target="_blank" rel="noopener">code</a>）的  <code>c &lt;- 1</code> ：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">    c := make(chan int)    </span><br><span class="line">    c &lt;- 1   // 报错 deadlock, 下面的代码不会执行</span><br><span class="line">    fmt.Println(&lt;-c)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//fatal error: all goroutines are asleep - deadlock!</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)    </span><br><span class="line">    c &lt;- <span class="number">1</span>   <span class="comment">// 报错 deadlock, 下面的代码不会执行</span></span><br><span class="line">    fmt.Println(&lt;-c)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//fatal error: all goroutines are asleep - deadlock!</span></span><br></pre></td></tr></table></figure>
 <p><strong>如果 channel 是 buffered ，只有当 buffer 数组满了的时候，发出端才会引发阻塞</strong>， 参考以下例子：</p>
 <p><a href="https://play.golang.org/p/Ikok29aKdrz" target="_blank" rel="noopener">code</a></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">	c := make(chan int, 1)</span><br><span class="line">	c &lt;- 1</span><br><span class="line">	fmt.Println(&lt;-c)</span><br><span class="line">	c &lt;- 2</span><br><span class="line">	c &lt;- 3 // 这一行发生阻塞，因 buffer 已满，但没有释放</span><br><span class="line">	fmt.Println(&lt;-c)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//1</span><br><span class="line">//fatal error: all goroutines are asleep - deadlock!</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>, <span class="number">1</span>)</span><br><span class="line">	c &lt;- <span class="number">1</span></span><br><span class="line">	fmt.Println(&lt;-c)</span><br><span class="line">	c &lt;- <span class="number">2</span></span><br><span class="line">	c &lt;- <span class="number">3</span> <span class="comment">// 这一行发生阻塞，因 buffer 已满，但没有释放</span></span><br><span class="line">	fmt.Println(&lt;-c)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//1</span></span><br><span class="line"><span class="comment">//fatal error: all goroutines are asleep - deadlock!</span></span><br></pre></td></tr></table></figure>
 <p>因为这个阻塞特效，buffer 的数量也可以用来控制程序的吞吐量。</p>
 <p><em>注：channel 是为不同 goroutine 之间的通讯而生的，通常情况下，他们的接收端和发出端一般都在不同的 goroutine 里，而不会在同一个 goroutine 里同时出现，像上面大多数的例子那样，仅仅是为了演示。</em></p>
 <p><strong>参考</strong>：</p>
@@ -2017,188 +2202,13 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2017/08/09/2017-08-09-react_native_packing_native_module_for_android_n_ios/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ttimehc">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="编程日志">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2017/08/09/2017-08-09-react_native_packing_native_module_for_android_n_ios/" class="post-title-link" itemprop="url">React Native 原生模块库打包指南</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2017-08-09 00:00:00" itemprop="dateCreated datePublished" datetime="2017-08-09T00:00:00+08:00">2017-08-09</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-08-09 10:57:01" itemprop="dateModified" datetime="2019-08-09T10:57:01+08:00">2019-08-09</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/前端/" itemprop="url" rel="index"><span itemprop="name">前端</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          本文以百度 OCR 的 iOS SDK 和 Android SDK 为例，介绍如何将其打包为一个原生模块库（Native Module library） “react-native-baidu-ocr” ，供 React Navive APP 调用...
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2017/08/09/2017-08-09-react_native_packing_native_module_for_android_n_ios/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
 
 
           </div>
@@ -2238,7 +2248,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-count">11</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
