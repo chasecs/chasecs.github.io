@@ -98,14 +98,14 @@
 
   <meta name="description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter 一、基础知识rpcRPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。 gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 RPC。 pro">
 <meta property="og:type" content="article">
-<meta property="og:title" content="gRPC Demo，如何用 go 开发 grpc 服务端&#x2F;客户端应用">
+<meta property="og:title" content="gRPC 入门，如何用 go 开发 grpc 服务端&#x2F;客户端应用">
 <meta property="og:url" content="https://chasecs.github.io/2019/08/20/grpc-go-a-working-demo/index.html">
 <meta property="og:site_name" content="编程日志">
 <meta property="og:description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter 一、基础知识rpcRPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。 gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 RPC。 pro">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-08-20T08:27:39.860Z">
+<meta property="og:updated_time" content="2019-08-20T12:22:34.273Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="gRPC Demo，如何用 go 开发 grpc 服务端&#x2F;客户端应用">
+<meta name="twitter:title" content="gRPC 入门，如何用 go 开发 grpc 服务端&#x2F;客户端应用">
 <meta name="twitter:description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter 一、基础知识rpcRPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。 gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 RPC。 pro">
 
 
@@ -124,7 +124,7 @@
   };
 </script>
 
-  <title>gRPC Demo，如何用 go 开发 grpc 服务端/客户端应用 | 编程日志</title>
+  <title>gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用 | 编程日志</title>
   
 
 
@@ -330,7 +330,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">gRPC Demo，如何用 go 开发 grpc 服务端/客户端应用
+          <h1 class="post-title" itemprop="name headline">gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用
 
               
             
@@ -356,7 +356,7 @@
                 
               
 
-              <time title="创建时间：2019-08-20 14:37:37 / 修改时间：16:27:39" itemprop="dateCreated datePublished" datetime="2019-08-20T14:37:37+08:00">2019-08-20</time>
+              <time title="创建时间：2019-08-20 14:37:37 / 修改时间：20:22:34" itemprop="dateCreated datePublished" datetime="2019-08-20T14:37:37+08:00">2019-08-20</time>
             
 
             
@@ -417,7 +417,7 @@
 <h2 id="一、基础知识"><a href="#一、基础知识" class="headerlink" title="一、基础知识"></a>一、基础知识</h2><h3 id="rpc"><a href="#rpc" class="headerlink" title="rpc"></a>rpc</h3><p>RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。</p>
 <p>gRPC 其中一种 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 <a href="https://github.com/astaxie/build-web-application-with-golang/blob/master/zh/08.4.md" target="_blank" rel="noopener">RPC</a>。</p>
 <h3 id="protocal-buffers"><a href="#protocal-buffers" class="headerlink" title="protocal buffers"></a>protocal buffers</h3><p>gRPC 最大的特点是使用 protocal buffers ，简称 protobuf。 protobuf 是 google 开源的一种交换数据机制，有些类似 XML 、JSON，但多了定义远程方法等内容。</p>
-<p>gRPC 开发的第一项工作就是先写 .proto 文件，然后用 protoc 编译器生成相应的代码，供 gPRC 的服务端和客户端调用。protobuf 跟语言无关，它可以生成不同语言的代码，供不同语言的项目使用。</p>
+<p>gRPC 开发的第一项工作就是先写 .proto 文件，然后用 protoc 编译器生成相应的代码，供 gPRC 的服务端和客户端调用。<strong>protobuf 跟语言无关，它可以生成不同语言的代码，供不同语言的项目使用。</strong></p>
 <p>因为 protocbuf 是 gRPC 开发的必备知识，所以事先有必要了解它的基本语法，入门教程见官网：<a href="https://developers.google.com/protocol-buffers/docs/overview" target="_blank" rel="noopener">protocol buffers</a></p>
 <h2 id="二、用-go-开发一个-gRPC-demo"><a href="#二、用-go-开发一个-gRPC-demo" class="headerlink" title="二、用 go 开发一个 gRPC demo"></a>二、用 go 开发一个 gRPC demo</h2><p>这个 demo 里将开发一个提供快速排序接口的服务端，以及一个发出排序请求的客户端，排序算法的实现部分在服务端实现，两者之间通过 gPRC 通讯。</p>
 <h3 id="1-配置开发环境"><a href="#1-配置开发环境" class="headerlink" title="1. 配置开发环境"></a>1. 配置开发环境</h3><p>安装 gRPC-go，<a href="https://grpc.io/docs/quickstart/go/" target="_blank" rel="noopener">国内方法</a></p>
@@ -468,8 +468,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/08/19/golang-channel-buffered-or-unbuffered/" rel="next" title="【go】channel 的 buffered 与 unbuffered">
-                <i class="fa fa-chevron-left"></i> 【go】channel 的 buffered 与 unbuffered
+              <a href="/2019/08/19/golang-channel-buffered-or-unbuffered/" rel="next" title="go channel，buffered 与 unbuffered 的区别">
+                <i class="fa fa-chevron-left"></i> go channel，buffered 与 unbuffered 的区别
               </a>
             
           </div>

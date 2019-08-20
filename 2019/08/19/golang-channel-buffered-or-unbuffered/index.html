@@ -98,14 +98,14 @@
 
   <meta name="description" content="go 通过 goroutine 实现并发，而不同的 goroutine 之间需要通过 channel 来通讯，否则就是两段各行其是的代码。 channel 解决 goroutine 的通讯看一个 code 12345678func main() &amp;#123;        go func()&amp;#123;      fmt.Println(&quot;I&apos;m gotoutine&quot;) //不会执行    &amp;#1">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【go】channel 的 buffered 与 unbuffered">
+<meta property="og:title" content="go channel，buffered 与 unbuffered 的区别">
 <meta property="og:url" content="https://chasecs.github.io/2019/08/19/golang-channel-buffered-or-unbuffered/index.html">
 <meta property="og:site_name" content="编程日志">
 <meta property="og:description" content="go 通过 goroutine 实现并发，而不同的 goroutine 之间需要通过 channel 来通讯，否则就是两段各行其是的代码。 channel 解决 goroutine 的通讯看一个 code 12345678func main() &amp;#123;        go func()&amp;#123;      fmt.Println(&quot;I&apos;m gotoutine&quot;) //不会执行    &amp;#1">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-08-19T06:36:20.952Z">
+<meta property="og:updated_time" content="2019-08-20T12:21:45.264Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【go】channel 的 buffered 与 unbuffered">
+<meta name="twitter:title" content="go channel，buffered 与 unbuffered 的区别">
 <meta name="twitter:description" content="go 通过 goroutine 实现并发，而不同的 goroutine 之间需要通过 channel 来通讯，否则就是两段各行其是的代码。 channel 解决 goroutine 的通讯看一个 code 12345678func main() &amp;#123;        go func()&amp;#123;      fmt.Println(&quot;I&apos;m gotoutine&quot;) //不会执行    &amp;#1">
 
 
@@ -124,7 +124,7 @@
   };
 </script>
 
-  <title>【go】channel 的 buffered 与 unbuffered | 编程日志</title>
+  <title>go channel，buffered 与 unbuffered 的区别 | 编程日志</title>
   
 
 
@@ -330,7 +330,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">【go】channel 的 buffered 与 unbuffered
+          <h1 class="post-title" itemprop="name headline">go channel，buffered 与 unbuffered 的区别
 
               
             
@@ -356,12 +356,24 @@
                 
               
 
-              <time title="创建时间：2019-08-19 01:23:29 / 修改时间：14:36:20" itemprop="dateCreated datePublished" datetime="2019-08-19T01:23:29+08:00">2019-08-19</time>
+              <time title="创建时间：2019-08-19 01:23:29" itemprop="dateCreated datePublished" datetime="2019-08-19T01:23:29+08:00">2019-08-19</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-20 20:21:45" itemprop="dateModified" datetime="2019-08-20T20:21:45+08:00">2019-08-20</time>
               
             
           </span>
@@ -483,8 +495,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/08/20/grpc-go-a-working-demo/" rel="prev" title="gRPC Demo，如何用 go 开发 grpc 服务端/客户端应用">
-                gRPC Demo，如何用 go 开发 grpc 服务端/客户端应用 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/08/20/grpc-go-a-working-demo/" rel="prev" title="gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用">
+                gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
