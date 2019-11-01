@@ -96,19 +96,18 @@
 
 
 
-  <meta name="description" content="密码哈希的基本知识: 加盐，key stretching 型加密算法；以及常见攻击方法：lookup tables ，rainbow tables">
+  <meta name="description" content="对前后端分离的 Golang Web 项目，既可以用 `http.FileServer` 提供前端静态文件的访问，也可以使用 `go-bindata-assetfs` 将它打包和后端一起编译成一个二进制文件。">
+<meta name="keywords" content="golang web">
 <meta property="og:type" content="article">
-<meta property="og:title" content="密码哈希加密">
-<meta property="og:url" content="https://chasecs.github.io/2019/07/28/2019-07-28-password-hashing-md/index.html">
+<meta property="og:title" content="构建 Golang Web 应用的两种方法">
+<meta property="og:url" content="https://chasecs.github.io/2019/11/01/how-to-build-your-Golang-Web-App/index.html">
 <meta property="og:site_name" content="编程日志">
-<meta property="og:description" content="密码哈希的基本知识: 加盐，key stretching 型加密算法；以及常见攻击方法：lookup tables ，rainbow tables">
+<meta property="og:description" content="对前后端分离的 Golang Web 项目，既可以用 `http.FileServer` 提供前端静态文件的访问，也可以使用 `go-bindata-assetfs` 将它打包和后端一起编译成一个二进制文件。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/bbacb4ee3811ce261fa6023c6de90718e22c7b49">
-<meta property="og:updated_time" content="2019-08-08T14:35:52.521Z">
+<meta property="og:updated_time" content="2019-11-01T10:15:08.059Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="密码哈希加密">
-<meta name="twitter:description" content="密码哈希的基本知识: 加盐，key stretching 型加密算法；以及常见攻击方法：lookup tables ，rainbow tables">
-<meta name="twitter:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/bbacb4ee3811ce261fa6023c6de90718e22c7b49">
+<meta name="twitter:title" content="构建 Golang Web 应用的两种方法">
+<meta name="twitter:description" content="对前后端分离的 Golang Web 项目，既可以用 `http.FileServer` 提供前端静态文件的访问，也可以使用 `go-bindata-assetfs` 将它打包和后端一起编译成一个二进制文件。">
 
 
 
@@ -116,7 +115,7 @@
 
   
   
-  <link rel="canonical" href="https://chasecs.github.io/2019/07/28/2019-07-28-password-hashing-md/">
+  <link rel="canonical" href="https://chasecs.github.io/2019/11/01/how-to-build-your-Golang-Web-App/">
 
 
 
@@ -126,7 +125,7 @@
   };
 </script>
 
-  <title>密码哈希加密 | 编程日志</title>
+  <title>构建 Golang Web 应用的两种方法 | 编程日志</title>
   
 
 
@@ -315,7 +314,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/07/28/2019-07-28-password-hashing-md/">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/11/01/how-to-build-your-Golang-Web-App/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ttimehc">
@@ -332,7 +331,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">密码哈希加密
+          <h1 class="post-title" itemprop="name headline">构建 Golang Web 应用的两种方法
 
               
             
@@ -358,24 +357,12 @@
                 
               
 
-              <time title="创建时间：2019-07-28 23:58:12" itemprop="dateCreated datePublished" datetime="2019-07-28T23:58:12+08:00">2019-07-28</time>
+              <time title="创建时间：2019-11-01 18:04:46 / 修改时间：18:15:08" itemprop="dateCreated datePublished" datetime="2019-11-01T18:04:46+08:00">2019-11-01</time>
             
 
             
               
 
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-08-08 22:35:52" itemprop="dateModified" datetime="2019-08-08T22:35:52+08:00">2019-08-08</time>
               
             
           </span>
@@ -392,7 +379,7 @@
                 <span class="post-meta-item-text">分类于</span>
               
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/安全/" itemprop="url" rel="index"><span itemprop="name">安全</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a></span>
 
                 
                 
@@ -413,7 +400,7 @@
           
 
           
-            <div class="post-description">密码哈希的基本知识: 加盐，key stretching 型加密算法；以及常见攻击方法：lookup tables ，rainbow tables</div>
+            <div class="post-description">对前后端分离的 Golang Web 项目，既可以用 `http.FileServer` 提供前端静态文件的访问，也可以使用 `go-bindata-assetfs` 将它打包和后端一起编译成一个二进制文件。</div>
           
 
         </div>
@@ -429,58 +416,87 @@
       
 
       
-        <p>密码哈希加密（password hashing），是常用的密码管理技术。在 web 开发等工程实践中，账户密码等敏感信息通常不会明文存储到数据库，而是转换成一段哈希值存储。这样即使哪天数据库泄露了，用户的密码也不会一眼被识破。密码哈希有以下特点：</p>
+        <p>对前后端分离的 web 项目，golang 后端可以以两种方式提供前端静态文件的访问：</p>
 <ol>
-<li>把任意长度的字符串，转换成固定长度的随机字符串。</li>
-<li>单向加密，不可逆转</li>
+<li>使用 <code>http.FileServer</code> 提供静态文件服务</li>
+<li>使用 <code>go-bindata-assetfs</code> 将前端静态文件打包成二进制数据，和后端构建到一起</li>
 </ol>
-<h2 id="加密及验证过程"><a href="#加密及验证过程" class="headerlink" title="加密及验证过程"></a>加密及验证过程</h2><h3 id="加盐加密"><a href="#加盐加密" class="headerlink" title="加盐加密"></a>加盐加密</h3><p>为了避免相同的密码每次加密后哈希值都一样，加密前一般会对密码加盐（adding salt），就是在密码加密前加掺入一段随机字符串。比如密码是 123456，加盐加密就是 <code>hash(&quot;123456&quot; + &quot;asERQWEvzz&quot;)</code>，只要盐不同，每次得出的哈希值就会不同。</p>
-<p>加盐需要注意：</p>
-<ol>
-<li>盐（随机字符串）不要重复使用</li>
-<li>盐不要太短</li>
-</ol>
-<p>加盐加密的场景，验证密码时也必须要知道盐时多少。所以，盐通常也会存在数据库，或者作为哈希值的一部分保存。</p>
-<h3 id="密码验证"><a href="#密码验证" class="headerlink" title="密码验证"></a>密码验证</h3><p>验证密码的过程，需要先从数据库取出盐和哈希值，然后对待验证的密码加盐后加密，得出新哈希值，然后和数据库取出的哈希值比较是否一致。</p>
-<p>整个完整的加密和验证过程如下:</p>
-<p><strong>加密</strong></p>
-<ol>
-<li>生成一个随机的足够长的盐，</li>
-<li>明文密码加盐后算出哈希值</li>
-<li>把哈希值（和盐）保存到数据库</li>
-</ol>
-<p><strong>验证</strong></p>
-<ol>
-<li>从数据库取出哈希值（和盐）</li>
-<li>待验证密码加盐后算出哈希值</li>
-<li>比较该哈希值和数据库的哈希值是否一致</li>
-</ol>
-<h2 id="常用的加密算法"><a href="#常用的加密算法" class="headerlink" title="常用的加密算法"></a>常用的加密算法</h2><p>加密算法一般推荐使用 <a href="https://en.wikipedia.org/wiki/Key_stretching" target="_blank" rel="noopener">key stretching</a> 算法。比如：PBKDF2, bcrypt, scrypt。</p>
-<p>key stretching 使得加密的算法更慢，更耗 CPU，从而加大暴力破解的难度。当然，这种情况下，如果你的密码验证需求很大，则应该考虑给它分配额外的计算资源。</p>
-<p>而 MD5, SHA1, SHA256, SHA512, RipeMD, WHIRLPOOL, SHA3 等加密算法以后计算很快，在要求更高的场景不推荐使用。</p>
-<h2 id="密码破解的常见方法："><a href="#密码破解的常见方法：" class="headerlink" title="密码破解的常见方法："></a>密码破解的常见方法：</h2><h3 id="1-字典攻击和暴力攻击"><a href="#1-字典攻击和暴力攻击" class="headerlink" title="1.字典攻击和暴力攻击"></a>1.字典攻击和暴力攻击</h3><p>字典攻击（dictionary attack），是使用一个由常见密、词语、短句等有意义字符组成的字典，挨个尝试。</p>
-<p>暴力攻击（brute-force attacks），使用每个可能的字符组合，相对来说更耗费计算，效率更低。</p>
-<h3 id="2-lookup-table-（查询表）"><a href="#2-lookup-table-（查询表）" class="headerlink" title="2.lookup table （查询表）"></a>2.lookup table （查询表）</h3><p>table 是指一个把明文密码和该密码经某个算法得出的哈希值存在一起的文件。例如：<code>4fded1464736e77865df232cbcb4cd19:yolo</code> ，<code>yolo</code> 是明文密码，冒号前的部分是它的哈希值。</p>
-<p>lookup table，就是拿表里的哈希值去比对数据库里的哈希值，如果发现相同的，也就找到了它的明文密码。</p>
-<p>使用 lookup table 攻击的前提是，已经得到了数据库的密码哈希值，然后用它去破译明文密码。</p>
-<p>因为 lookup table 预先把很多密码（字典）计算出对应的哈希值，使用的也是目标采用的算法（或猜测的）。所以在攻击时可以节省下计算字典哈希的时间，在大量攻击的场景下，这些时间累积就来就很可观了。</p>
-<h3 id="3-Rainbow-Tables-彩虹表攻击"><a href="#3-Rainbow-Tables-彩虹表攻击" class="headerlink" title="3. Rainbow Tables 彩虹表攻击"></a>3. Rainbow Tables 彩虹表攻击</h3><p><a href="https://en.wikipedia.org/wiki/Rainbow_table" target="_blank" rel="noopener">彩虹表</a>和查询表有相似之处，都是拿内存换取计算时间的 space–time tradeoff 方法。查询表有个缺点，如果要保存足够大的字典和哈希值对，需要很大的存储空间，彩虹表通过计算一条哈希链，来减少存储空间需求。</p>
-<p>它的原理是，先假设一个反哈希的 R 函数（reduction function），它可以将一个哈希值计算成一个和原密码相同格式（可理解为相同长度）的字符串。</p>
-<p>假设现在有密码 p0 ，经过哈希函数 H 计算得到哈希值 h0 = H(p0), 再经过 R 函数计算，p1 = R(h0)，然后重复这一步骤 n 次算出 h1 = H(p1), p2 = R(h1)…就得出一条哈希链，最后只要保留起点 p0 和终点 pn。</p>
-<p>如果 p0=aaaaaa，这条哈希链就如下图：</p>
-<p><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/bbacb4ee3811ce261fa6023c6de90718e22c7b49" alt></p>
-<p>假设现在有一个哈希值 h 需要破译明文密码，可以用先用 R 函数计算出p’，再用 H 函数算出 h’，如此重复 n 次。如果某个 p’ 值正好存在于彩虹表中，则明文密码很有可能就在这条哈希链上。只需要找出这条哈希链的起始点 p0 ， 再跑一遍 H，R，H，R…运算，即推断出明文密码。</p>
-<p>以上图为例，假如哈希值是 920ECF10，用 R 计算之后得出 kiebgt，正好是存在于彩虹表。于是，遍可取出起始点 aaaaaa ，重复跑 H、R 函数计算，当算到 H(sgfnyd) = 920ECF10 ，则说明，sgfnyd 就是我们要找的明文密码。</p>
-<p>以上只是彩虹表的基本原理，在实践中，技术细节需要优化，比如原本统一的 R 函数会变成每步都不一样的 R1 、R2、 R3 ….等等</p>
-<p>彩虹表对破解 md5 等加密方法很有效。而防范彩虹表攻击的最大办法，就是加盐来增加破解的难度。</p>
-<p><strong>参考</strong></p>
-<ul>
-<li><a href="https://crackstation.net/hashing-security.htm" target="_blank" rel="noopener">Salted Password Hashing - Doing it Right</a></li>
-<li><a href="https://www.hackthissite.org/articles/read/1128" target="_blank" rel="noopener">Lookup Table Attacks
-</a></li>
-<li><a href="http://www.ha97.com/4009.html" target="_blank" rel="noopener">（总结）密码破解之王：Ophcrack彩虹表(Rainbow Tables)原理详解</a></li>
-<li><a href="https://www.zhihu.com/question/19790488" target="_blank" rel="noopener">什么是彩虹表？</a></li>
-</ul>
+<h1 id="一、http-FileServer-提供静态文件服务"><a href="#一、http-FileServer-提供静态文件服务" class="headerlink" title="一、http.FileServer 提供静态文件服务"></a>一、<code>http.FileServer</code> 提供静态文件服务</h1><p>文件目录：</p>
+<pre><code>go-web-prj/
+        static/
+                index.html
+        main.go
+</code></pre><p>index.html :</p>
+<pre><code>&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;p&gt;Hello World!&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>main.go</p>
+<pre><code>package main
+
+import (
+    &quot;log&quot;
+    &quot;net/http&quot;
+)
+
+func main() {
+    // Create a fileServer handler that serves our static files.
+    fileServer := http.FileServer(http.Dir(&quot;static/&quot;))
+
+    http.HandleFunc(
+        &quot;/&quot;,
+        func(w http.ResponseWriter, r *http.Request) {
+            fileServer.ServeHTTP(w, r)
+        },
+    )
+
+    log.Fatal(http.ListenAndServe(&quot;:8080&quot;, nil))
+}
+</code></pre><p>此时使用 <code>go run</code>  或  <code>go build</code> 将后端代码运行、构建，便可以在浏览器打开 <code>[localhost:8080](http://localhost:8080)</code> 访问。</p>
+<p>不过，这种打包形式有一个缺点，就是必须保证 <code>static/</code>  目录的路径正确，如果修改或者不存在了，前端文件就不可以正常渲染。</p>
+<p>使用 <code>go-bindata-assetfs</code> 打包前端静态文件可以解决这个问题。</p>
+<h2 id="二、使用-go-bindata-assetfs-打包前端文件"><a href="#二、使用-go-bindata-assetfs-打包前端文件" class="headerlink" title="二、使用 go-bindata-assetfs 打包前端文件"></a>二、使用 <code>go-bindata-assetfs</code> 打包前端文件</h2><p>使用前先安装：</p>
+<pre><code>$ go get github.com/go-bindata/go-bindata/...
+$ go get github.com/elazarl/go-bindata-assetfs/...
+</code></pre><p>将前端文件打包：</p>
+<pre><code>$ go-bindata-assetfs static/...
+</code></pre><p>生成 <code>bindata_assetfs.go</code> 文件</p>
+<p>修改 <code>main.go</code> 代码：</p>
+<pre><code>package main
+
+import (
+    &quot;log&quot;
+    &quot;net/http&quot;
+)
+
+func main() {
+    // Create a fileServer handler that serves our static files.
+    http.Handle(&quot;/&quot;, http.FileServer(assetFS()))
+    log.Fatal(http.ListenAndServe(&quot;:8080&quot;, nil))
+}
+</code></pre><p>使用 <code>go mod</code> 方便接下来构建：</p>
+<pre><code>go mod init go-web-prj
+</code></pre><p>构建：</p>
+<pre><code>go build main.go bin bindata_assetfs.go
+</code></pre><p>然后运行生成的 <code>main</code> 文件，即可在浏览器打开 <code>[localhost:8080](http://localhost:8080)</code> 访问。</p>
+<p>此时 <code>static/</code> 文件已打包进二进制文件，所以当前的 <code>static/</code> 修改甚至删除，都不影响网站的正常使用。</p>
+<h2 id="使用-Docker-部署"><a href="#使用-Docker-部署" class="headerlink" title="使用 Docker 部署"></a>使用 Docker 部署</h2><p>如果是打包好的二进制文件，使用 docker 部署十分简单， Dockerfille :</p>
+<pre><code>FROM scratch
+
+ADD main /
+
+CMD [&quot;/main&quot;]
+</code></pre><p>然后构建：</p>
+<pre><code>dk build -t go-web-prj .
+</code></pre><p>运行：</p>
+<pre><code>dk run -p 8080:8080 web-test
+</code></pre><p>如果出现：</p>
+<pre><code>standard_init_linux.go:211: exec user process caused &quot;exec format error&quot;
+</code></pre><p>之类的错误，那是因为二进制文件编译环境出错，对于 linux 的 docker 环境，通常要设置环境变量：</p>
+<pre><code>env GOOS=linux GOARCH=arm64
+</code></pre><p>更多的 go 编译环境参考：<a href="https://gist.github.com/asukakenji/f15ba7e588ac42795f421b48b8aede63" target="_blank" rel="noopener">Golang GOOS and GOARCH</a></p>
 
       
     </div>
@@ -502,6 +518,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/golang-web/" rel="tag"># golang web</a>
+          
+        </div>
+      
 
       
       
@@ -511,8 +533,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/10/26/2017-10-26-javascript-scoping-and-statements-of-var-let-const/" rel="next" title="JavaScript 作用域及 var、let、const">
-                <i class="fa fa-chevron-left"></i> JavaScript 作用域及 var、let、const
+              <a href="/2019/08/20/grpc-go-a-working-demo/" rel="next" title="gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用">
+                <i class="fa fa-chevron-left"></i> gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用
               </a>
             
           </div>
@@ -520,10 +542,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/08/09/redis-usage-and-its-datatype/" rel="prev" title="redis 的使用场景及其数据类型">
-                redis 的使用场景及其数据类型 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -706,7 +724,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#加密及验证过程"><span class="nav-number">1.</span> <span class="nav-text">加密及验证过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#加盐加密"><span class="nav-number">1.1.</span> <span class="nav-text">加盐加密</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#密码验证"><span class="nav-number">1.2.</span> <span class="nav-text">密码验证</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常用的加密算法"><span class="nav-number">2.</span> <span class="nav-text">常用的加密算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#密码破解的常见方法："><span class="nav-number">3.</span> <span class="nav-text">密码破解的常见方法：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-字典攻击和暴力攻击"><span class="nav-number">3.1.</span> <span class="nav-text">1.字典攻击和暴力攻击</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-lookup-table-（查询表）"><span class="nav-number">3.2.</span> <span class="nav-text">2.lookup table （查询表）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Rainbow-Tables-彩虹表攻击"><span class="nav-number">3.3.</span> <span class="nav-text">3. Rainbow Tables 彩虹表攻击</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、http-FileServer-提供静态文件服务"><span class="nav-number">1.</span> <span class="nav-text">一、http.FileServer 提供静态文件服务</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#二、使用-go-bindata-assetfs-打包前端文件"><span class="nav-number">1.1.</span> <span class="nav-text">二、使用 go-bindata-assetfs 打包前端文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-Docker-部署"><span class="nav-number">1.2.</span> <span class="nav-text">使用 Docker 部署</span></a></li></ol></li></ol></div>
             
 
           </div>
