@@ -96,18 +96,18 @@
 
 
 
-  <meta name="description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通工作，从而提高开发效率。">
+  <meta name="description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="利用 swagger 管理 API 开发">
 <meta property="og:url" content="https://chasecs.github.io/2019/11/20/introduction-to-swagger-a-tool-simplify-your-api-development/index.html">
 <meta property="og:site_name" content="编程日志">
-<meta property="og:description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通工作，从而提高开发效率。">
+<meta property="og:description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://chasecs.github.io/images/swagger-editor.png">
-<meta property="og:updated_time" content="2019-11-20T17:17:28.545Z">
+<meta property="og:updated_time" content="2019-11-21T05:16:04.577Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="利用 swagger 管理 API 开发">
-<meta name="twitter:description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通工作，从而提高开发效率。">
+<meta name="twitter:description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。">
 <meta name="twitter:image" content="https://chasecs.github.io/images/swagger-editor.png">
 
 
@@ -375,7 +375,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-11-21 01:17:28" itemprop="dateModified" datetime="2019-11-21T01:17:28+08:00">2019-11-21</time>
+                <time title="修改时间：2019-11-21 13:16:04" itemprop="dateModified" datetime="2019-11-21T13:16:04+08:00">2019-11-21</time>
               
             
           </span>
@@ -395,7 +395,7 @@
           
 
           
-            <div class="post-description">swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通工作，从而提高开发效率。</div>
+            <div class="post-description">swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。</div>
           
 
         </div>
@@ -411,8 +411,14 @@
       
 
       
-        <p>第一次知道 swagger 这个工具， 是在 docker 的源码里，docker 客户端和服务端的 API 就是使用 swagger 来管理。最近在一次技术交流会上，听人提到用 swagger 来自动生成 api 文档，十分方便，便留心记了下来。</p>
-<p>前几天抽空研究了一下，发现使用 swagger 进行 api 开发，确实可以减少了许多繁琐的工作，大大提高开发和前后端沟通的效率。使用 swagger ，只要在项目里写好 <code>swagger.yaml</code>文件，其他开发人员需要了解 api 的信息时，把它放到线上或下载下来的 swagger editor，就能自动生成 api 文档，调试接口，甚至还有生成多种语言的客户端代码、服务端代码等功能。</p>
+        <p>第一次知道 swagger 这个工具， 是在 docker 的源码里，docker 客户端和服务端的 API 就是使用 swagger 来管理。最近在一次技术交流会上，听人提到用 swagger 来自动生成 api 文档，省下了许多前后端沟通的工夫，便留心记了下来。</p>
+<p>前几天抽空研究了一下，发现使用 swagger 进行 api 开发，确实可以减少了许多繁琐的工作，大大提高开发和前后端沟通的效率。使用 swagger ，只要在项目里写好 <code>swagger.yaml</code>文件，其他开发人员需要了解 api 的信息时，把它放到线上或下载下来的 swagger editor，就能自动生成 api 文档，调试接口，还可以生成多种语言的客户端代码、服务端代码。</p>
+<p>swagger 最主要的优点，总结有以下几点：</p>
+<ul>
+<li>记录 api 信息只要一个 yaml 文件，用的时候放到 editor 就能直接生成文档。yaml 容易编辑维护</li>
+<li>可以生成多种客户端代码，客户端调接口只要传参数，简化使用方法</li>
+<li>可以在 editor 请求调试接口</li>
+</ul>
 <h2 id="Swagger-yaml文件示例"><a href="#Swagger-yaml文件示例" class="headerlink" title="Swagger yaml文件示例"></a>Swagger <code>yaml</code>文件示例</h2><p>Swagger 定义 api 的标准文件可以是 json 格式也可以是 yaml 格式，但是使用 yaml 可读性更高和更容易编写。</p>
 <p>Swagger 目前最新版本是 OpenAPI 3.0 （ Swagger Specification 已经被捐献给 linux 基金会，更名为 <a href="https://www.openapis.org/" target="_blank" rel="noopener">OpenAPI Specification</a> (OAS) ，因此 Swagger 和 OpenAPI 基本可以理解为一个东西），虽然 3.0 版本也可以生成的客户端代码，但支持语言没有 2.0 的多。本文还是使用一个 2.0 的 yaml 文件作为示例，介绍 swagger 的基本语法。不过，2.0 的 yaml 可以在 swagger editor 里自动转成 3.0。</p>
 <h3 id="api-文档的基本信息"><a href="#api-文档的基本信息" class="headerlink" title="api 文档的基本信息"></a>api 文档的基本信息</h3><p>Yaml 文件开头需要声明版本：</p>
@@ -450,8 +456,12 @@
 <p><img alt="swagger-editor" src="/images/swagger-editor.png" style="border: 1px solid black"></p>
 <p>在 editor 里还可以根据自己需要生成客户端代码，服务端代码。客户端代码可以类似 sdk 那样接入项目，调用时只要传入参数即可。</p>
 <p>服务端代码是一个模版，帮你定义好最终输出数据的格式，而中间的实现逻辑，还需要自己完成。</p>
-<h3 id="swagger-的一点不足"><a href="#swagger-的一点不足" class="headerlink" title="swagger 的一点不足"></a>swagger 的一点不足</h3><p>swagger 总体上可以大大提高 api 开发的效率，不过试用的过程中，还是发现了美中不足之处。</p>
+<h2 id="swagger-的不足"><a href="#swagger-的不足" class="headerlink" title="swagger 的不足"></a>swagger 的不足</h2><p>swagger 总体上可以大大提高 api 开发的效率，不过试用的过程中，还是发现了美中不足之处。</p>
+<ul>
+<li><p>无法通过 json 数据自动生成 schema。</p>
 <p>写 yaml 文件毕竟还是要花一些时间，尤其是定义返回数据的<code>schema</code>。假如可以导入接口返回的 json 数据，自动生成 schema 的 properties 等信息，又会方便了许多。</p>
+</li>
+</ul>
 <p><strong>参考文章：</strong></p>
 <ul>
 <li><a href="https://spin.atomicobject.com/2018/08/30/swagger-api-intro/" target="_blank" rel="noopener">Intro to Swagger – A Structured Approach to Creating an API</a></li>
@@ -678,7 +688,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Swagger-yaml文件示例"><span class="nav-number">1.</span> <span class="nav-text">Swagger yaml文件示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#api-文档的基本信息"><span class="nav-number">1.1.</span> <span class="nav-text">api 文档的基本信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在-yaml定义一个-GET请求接口"><span class="nav-number">1.2.</span> <span class="nav-text">在 yaml定义一个 GET请求接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#POST-请求接口示例"><span class="nav-number">1.3.</span> <span class="nav-text">POST 请求接口示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-ref-复用数据类型"><span class="nav-number">1.4.</span> <span class="nav-text">使用 $ref  复用数据类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-swagger-editor-生成文档、代码"><span class="nav-number">2.</span> <span class="nav-text">使用 swagger editor 生成文档、代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#swagger-的一点不足"><span class="nav-number">2.1.</span> <span class="nav-text">swagger 的一点不足</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Swagger-yaml文件示例"><span class="nav-number">1.</span> <span class="nav-text">Swagger yaml文件示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#api-文档的基本信息"><span class="nav-number">1.1.</span> <span class="nav-text">api 文档的基本信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在-yaml定义一个-GET请求接口"><span class="nav-number">1.2.</span> <span class="nav-text">在 yaml定义一个 GET请求接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#POST-请求接口示例"><span class="nav-number">1.3.</span> <span class="nav-text">POST 请求接口示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-ref-复用数据类型"><span class="nav-number">1.4.</span> <span class="nav-text">使用 $ref  复用数据类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-swagger-editor-生成文档、代码"><span class="nav-number">2.</span> <span class="nav-text">使用 swagger editor 生成文档、代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#swagger-的不足"><span class="nav-number">3.</span> <span class="nav-text">swagger 的不足</span></a></li></ol></div>
             
 
           </div>
