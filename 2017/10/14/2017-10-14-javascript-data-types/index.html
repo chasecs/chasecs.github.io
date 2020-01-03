@@ -440,6 +440,7 @@
 <p>除了 primitive，其余的都是 object（对象）</p>
 <h2 id="一、第一种方法-typeof"><a href="#一、第一种方法-typeof" class="headerlink" title="一、第一种方法 typeof"></a>一、第一种方法 typeof</h2><p><code>typeof</code>  操作符，是判断 javascript 类型的基本方法，返回的结果是字符串:<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typeof</span> operand</span><br></pre></td></tr></table></figure></p>
 <p>typeof 能得到的结果如下：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -486,6 +487,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>在大部分情况下，类型判断使用 typeof 就可以了，不过 typeof 也有盲点。</p>
 <h4 id="盲点一：typeof-null-‘object’"><a href="#盲点一：typeof-null-‘object’" class="headerlink" title="盲点一：typeof null === ‘object’"></a>盲点一：typeof null === ‘object’</h4><p>所以，null 的判断方法如下：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isNull</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> value === <span class="literal">null</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h4 id="盲点二：无法检测对象的类型"><a href="#盲点二：无法检测对象的类型" class="headerlink" title="盲点二：无法检测对象的类型"></a>盲点二：无法检测对象的类型</h4><p>比如 string ，虽然大多数情况下是原始类型的 string ，也有可能是 string 对象</p>

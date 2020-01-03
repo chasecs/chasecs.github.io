@@ -477,13 +477,13 @@
 <p>参照 baidu 官方文档，在 <code>RNBaiduOcr.m</code> 实现“RCTBridgeModule”协议。代码实现部分可以直接看<a href="https://github.com/chasecs/react-native-baidu-ocr/blob/master/ios/RNBaiduOcr.m" target="_blank" rel="noopener">源码</a>，这里就不细说。</p>
 <p>代码实现后，需要将 RNBaiduOcr 项目 build 一下。如果 “’React/RCTDefines.h’ file not found”，改为”RCTDefines.h”</p>
 <p>用 Xcode 打开 ExampleApp 项目，Libraires 右键 Add Files to “ExampleApp” ,选择 node_module/react-native-baidu-ocr/ios/RNBaiduOcr.xcodeproj</p>
-<p>选择 ExampleApp – TARGETS – build phases – Link Binary With Libraries</p>
+<p>选择 ExampleApp — TARGETS — build phases — Link Binary With Libraries</p>
 <p><img alt="p4" src="/images/react_native_packing_native_module_for_android_n_ios/p4.png" style="border: 1px solid black"></p>
 <p>点击“+”，Add “libRNBaiduOcr.a”</p>
 <p><img alt="Add “libRNBaiduOcr.a”" src="/images/react_native_packing_native_module_for_android_n_ios/p5.png" style="border: 1px solid black"></p>
 <p>打开 ExampleApp 项目 Libiraies 里面的 RNBaiduOcr.xcodeproj,将 AipOcrSdk.framework 和 AipBase.framework 复制到 ExampleApp 文件夹（注意此时应该关掉 Xcode 之前打开的 RNBaiduOcr 项目）</p>
 <p><img alt="复制到 ExampleApp" src="/images/react_native_packing_native_module_for_android_n_ios/p6.png" style="border: 1px solid black"></p>
-<p>选择 ExampleApp – TARGETS -&gt; General -&gt; Embedded Binaries, 加入<br>AipOcrSdk.framework 和 AipBase.framework</p>
+<p>选择 ExampleApp — TARGETS -&gt; General -&gt; Embedded Binaries, 加入<br>AipOcrSdk.framework 和 AipBase.framework</p>
 <p><img alt="加入AipOcrSdk.framework 和 AipBase.framework" src="/images/react_native_packing_native_module_for_android_n_ios/p7.png" style="border: 1px solid black"></p>
 <p>上述工作完成后，iOS部分就能使用了。</p>
 <h2 id="打包-Android-部分"><a href="#打包-Android-部分" class="headerlink" title="打包 Android 部分"></a>打包 Android 部分</h2><p>参照<a href="http://ai.baidu.com/docs#/OCR-Android-SDK/top" target="_blank" rel="noopener">百度 OCR Android SDK 开发者文档</a>，将下载包libs目录中的 ocr-sdk.jar 文件，拷贝到工程 node_module/react-native-baidu-ocr/android/libs 目录中。</p>

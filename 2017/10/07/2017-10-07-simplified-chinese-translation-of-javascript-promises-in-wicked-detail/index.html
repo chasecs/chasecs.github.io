@@ -427,14 +427,8 @@
       
 
       
-        <blockquote>
-</blockquote>
-<p><strong>译按：</strong><br><em>Promise 是异步编程的一种解决方案，让 javascript 可以从杂乱回调函数中解脱出来。后来 ES6 标准把 Promise 纳入其中，原生提供了 Promise 对象。Promise 也成为 ES6 最主要的特性之一。</em><br><em>网上介绍 promise 使用方法的文章很多，解释其原理却很少。这篇文章循序渐进地实现了一遍 promise，分析透彻，对了解 promise 的工作原理很有帮助。为了加深印象，所以把原文翻译了一遍。</em></p>
-<blockquote>
-</blockquote>
-<p><strong>原文：</strong> <a href="http://www.mattgreer.org/articles/promises-in-wicked-detail/" target="_blank" rel="noopener">JavaScript Promises … In Wicked Detail</a></p>
-<blockquote>
-</blockquote>
+        <p>&gt;<br><strong>译按：</strong><br><em>Promise 是异步编程的一种解决方案，让 javascript 可以从杂乱回调函数中解脱出来。后来 ES6 标准把 Promise 纳入其中，原生提供了 Promise 对象。Promise 也成为 ES6 最主要的特性之一。</em><br><em>网上介绍 promise 使用方法的文章很多，解释其原理却很少。这篇文章循序渐进地实现了一遍 promise，分析透彻，对了解 promise 的工作原理很有帮助。为了加深印象，所以把原文翻译了一遍。</em></p>
+<p>&gt;<br><strong>原文：</strong> <a href="http://www.mattgreer.org/articles/promises-in-wicked-detail/" target="_blank" rel="noopener">JavaScript Promises … In Wicked Detail</a><br>&gt;</p>
 <p>我在自己的 JavaScript 代码里使用 promises 有一段时间了。刚开始使用的时候确实有些费解，但现在已经驾轻就熟。不过仔细想起来，我并不是完全明白它的原理。写这篇文章的目的就是为了弄明白它。如果你坚持看完这篇文章，你也能很好地理解 promise。</p>
 <p>我们将渐进式地实现一个 promise，最终版本会基本符合 <a href="http://promises-aplus.github.io/promises-spec/" target="_blank" rel="noopener">Promises/A+ 规范</a>，在这个过程中，你也会明白 promise 是怎样去满足异步编程的需求。本文假定你已经对 promises 有一定的了解。如果你还什么都不知道，可以先去 <a href="http://promisejs.org/" target="_blank" rel="noopener">promisejs.org</a> 看看。</p>
 <h2 id="更新日志"><a href="#更新日志" class="headerlink" title="更新日志"></a>更新日志</h2><ul>
@@ -510,18 +504,10 @@
 <li>如果 <code>resolve()</code> 先于 <code>then()</code> 被调用，value 会被保存下来，当 <code>then()</code> 被调用时，value 就可以交付了。</li>
 </ul>
 <p>注意到没有，现在已经不需要用到 <code>setTimeout</code> 了，不过这只是暂时的，等会儿还要再用到。</p>
-<blockquote>
-</blockquote>
-<p>在 promises 里，并不讲究程序执行的先后次序，我们可以根据自己的需要决定先调用 <code>then()</code> 还是 <code>resolve()</code>。这也是“”捕获一个终值并保存到对象里”的强大之处。</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>在 promises 里，并不讲究程序执行的先后次序，我们可以根据自己的需要决定先调用 <code>then()</code> 还是 <code>resolve()</code>。这也是“”捕获一个终值并保存到对象里”的强大之处。<br>&gt;</p>
 <p>按 Promises/A+ 规范，我们的 promises 还有不少要完善的地方，不过当前已经挺强大的了。我们可以多次调用 <code>then()</code>，每次都会得到相同的返回值：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> promise = doSomething();</span><br><span class="line"></span><br><span class="line">promise.then(<span class="function"><span class="keyword">function</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'Got a value:'</span>, value);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">promise.then(<span class="function"><span class="keyword">function</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'Got the same value again:'</span>, value);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
 <blockquote>
-<blockquote>
-</blockquote>
-<p>当然，对于目前的 promise 实现版本，这种说法也不完全是对的。可能会有相反的情况: 比如，在 <code>resolve()</code> 调用之前，多次调用 <code>then()</code>，只会成功兑现最后一次调用的 <code>then()</code>。对于这种情况有一个解决方案：把 promise 里所有的 deferreds 都保存在一个列表里，而不是像现在只保存在一个变量里。为了不让本文变得更复杂，我就不在这里实现这个特性。</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>当然，对于目前的 promise 实现版本，这种说法也不完全是对的。可能会有相反的情况: 比如，在 <code>resolve()</code> 调用之前，多次调用 <code>then()</code>，只会成功兑现最后一次调用的 <code>then()</code>。对于这种情况有一个解决方案：把 promise 里所有的 deferreds 都保存在一个列表里，而不是像现在只保存在一个变量里。为了不让本文变得更复杂，我就不在这里实现这个特性。<br>&gt;</p>
 </blockquote>
 <h2 id="实现-Promises链"><a href="#实现-Promises链" class="headerlink" title="实现 Promises链"></a><a name="实现Promises链">实现 Promises链</a></h2><p>promise 可以异步地捕获一个概念并保存到对象里（capture the notion of asynchronicity in an object)，所以，我们可以<br>实现 promise 链，映射 promises，让它们依序或者平行地运行……以下的代码在 promise 中很常见：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">getSomeData()</span><br><span class="line">.then(filterTheData)</span><br><span class="line">.then(processTheData)</span><br><span class="line">.then(displayTheData);</span><br></pre></td></tr></table></figure></p>
 <p><code>getSomeData</code> 返回一个 promise，并调用 <code>then()</code>，而第一个 then 返回的，也必须是一个 promise，然后才可以不断地调用 <code>then()</code>。</p>
@@ -532,11 +518,7 @@
 <p><a href="http://jsfiddle.net/city41/HdzLv/2/" target="_blank" rel="noopener">fiddle</a></p>
 <p>嗯，代码开始有点古怪了，你应该庆幸我们慢慢地构建这一切。这个环节最关键就是，<code>then()</code> 返回一个新的 promise 。</p>
 <blockquote>
-<blockquote>
-</blockquote>
-<p>由于 <code>then()</code> 总是会返回一个新的 promise 对象，这意味着至少有一个 promise 对象被创建(created)、处理(resolved)，最终却被无视(ignored)。这种情况也被视为一种浪费，回调模式就不存在这种问题。这是 promise 的一个弊端，想必现在你也能理解为什么 Javascript 圈子里有人会不喜欢 promise。</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>由于 <code>then()</code> 总是会返回一个新的 promise 对象，这意味着至少有一个 promise 对象被创建(created)、处理(resolved)，最终却被无视(ignored)。这种情况也被视为一种浪费，回调模式就不存在这种问题。这是 promise 的一个弊端，想必现在你也能理解为什么 Javascript 圈子里有人会不喜欢 promise。<br>&gt;</p>
 </blockquote>
 <p>那么，第二个 promise 的要 resolve 的值在哪里呢？它来自第一个 promise 的返回值，在 <code>handle()</code> 方法的最后部分实现。 <code>handler</code> 对象包含了一个 <code>onResolved</code> 回调方法和一个 <code>resolve()</code> 的引用（reference）。因为有不只一个 <code>resolve()</code> 方法，每个 promise 都会复制属于自身的 <code>resolve()</code> 方法，以及一个运行该方法的闭包。这也是从第一个 promise 过渡到第二个 promise 的桥梁。</p>
 <p>我们把第一个 promise 归结到这行代码：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> ret = handler.onResolved(value);</span><br></pre></td></tr></table></figure></p>
@@ -545,11 +527,7 @@
 <p>因为 <code>then()</code> 总是会返回一个 promise，所以这个 promise 链可以无限延长：</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">doSomething().then(<span class="function"><span class="keyword">function</span>(<span class="params">result</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'first result'</span>, result);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">88</span>;</span><br><span class="line">&#125;).then(<span class="function"><span class="keyword">function</span>(<span class="params">secondResult</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'second result'</span>, secondResult);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">99</span>;</span><br><span class="line">&#125;).then(<span class="function"><span class="keyword">function</span>(<span class="params">thirdResult</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'third result'</span>, thirdResult);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">200</span>;</span><br><span class="line">&#125;).then(<span class="function"><span class="keyword">function</span>(<span class="params">fourthResult</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// on and on...</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 <p>假如在上述例子中，我们要在最后收集整个 promise 链的每一个返回值，该怎么办？利用这段 promise 链，我们可以自己构建返回的结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">doSomething().then(function(result) &#123;</span><br><span class="line">  var results = [result];</span><br><span class="line">  results.push(88);</span><br><span class="line">  return results;</span><br><span class="line">&#125;).then(function(results) &#123;</span><br><span class="line">  results.push(99);</span><br><span class="line">  return results;</span><br><span class="line">&#125;).then(function(results) &#123;</span><br><span class="line">  console.log(results.join(&apos;,&apos;);</span><br><span class="line">&#125;);</span><br><span class="line">// the output is</span><br><span class="line">//</span><br><span class="line">// 42, 88, 99</span><br></pre></td></tr></table></figure></p>
-<blockquote>
-</blockquote>
-<p>Promises 只会 resolve 一个值 value 。如果你需要传递超过一个值，就需要把多个值改头换面包装起来（比如用数组、对象，合并字符串，等等）。</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>Promises 只会 resolve 一个值 value 。如果你需要传递超过一个值，就需要把多个值改头换面包装起来（比如用数组、对象，合并字符串，等等）。<br>&gt;</p>
 <p>更好的办法是使用 promise 的 <code>all()</code> 方法，或者其它的工具方法，它们拓展了 promise 的可用性，下来也将会探讨这部分内容。</p>
 <h3 id="回调是可选项"><a href="#回调是可选项" class="headerlink" title="回调是可选项"></a>回调是可选项</h3><p><code>then()</code> 方法里的回调并不是必须的，如果你省略它，随后的 promise 会接着 resolve 上一个 promise 返回的值：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">doSomething().then().then(<span class="function"><span class="keyword">function</span>(<span class="params">result</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'got a result'</span>, result);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// the output is</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// got a result 42</span></span><br></pre></td></tr></table></figure></p>
 <p>个中原因可以在 <code>handle()</code>里发现，假如没有回调，它就会 resolve 上一个 promise 留下的值：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(!handler.onResolved) &#123;</span><br><span class="line">  handler.resolve(value);</span><br><span class="line">  <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
@@ -562,13 +540,7 @@
 <blockquote>
 <p>这里也有可能会出现无限循环的情况，Promises/A+ 规范建议实现 promise 时要检测无限循环的情况，但不是必须的。</p>
 </blockquote>
-</blockquote>
-<blockquote>
-<blockquote>
-</blockquote>
-<p>还有需要指出的一点，这里上述判断返回值是否为 promise 的方法并不符合 Promises/A+ 规范，这篇文章的内容也没有完全符合 Promises/A+ 规范。如果你对这方面的内容感到好奇，建议你阅读这一节 <a href="https://promisesaplus.com/#the-promise-resolution-procedure" target="_blank" rel="noopener">promise resolution procedure</a>.</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>还有需要指出的一点，这里上述判断返回值是否为 promise 的方法并不符合 Promises/A+ 规范，这篇文章的内容也没有完全符合 Promises/A+ 规范。如果你对这方面的内容感到好奇，建议你阅读这一节 <a href="https://promisesaplus.com/#the-promise-resolution-procedure" target="_blank" rel="noopener">promise resolution procedure</a>.<br>&gt;</p>
 </blockquote>
 <p>需要注意的是，我们判断 <code>newValue</code> 是否为 promise 的方法是很宽松的，只判断返回值是否有一个 <code>then()</code> 方法。我这种 <a href="https://en.wikipedia.org/wiki/Duck_typing" target="_blank" rel="noopener">duck typing</a> 的做法其实是故意的，这样一来，不同的 promise 实现版本就可以协同使用（interopt）。实际上，不同 promise 库之前混用是很常见的，你在使用不同的第三方库时，它们也可能使用不同的 promise 实现方法。</p>
 <blockquote>
@@ -584,11 +556,7 @@
 <p><a href="http://jsfiddle.net/city41/rLXsL/2/" target="_blank" rel="noopener">fiddle</a></p>
 <p>除了增加了 <code>reject()</code> 方法，<code>handle()</code> 方法也要对 rejection 作出处理。在 <code>handle()</code> 方法里，将根据 <code>state</code> 的状态分别作出 reject 或 resolve 。而当前的 <code>state</code> 的也会被传递到下一个 promise ，下一个 promise 的 <code>resolve()</code> 或 <code>reject()</code> 方法同样也会改变它自身的 <code>state</code>。</p>
 <blockquote>
-<blockquote>
-</blockquote>
-<p>使用 promise 时，很容易忽略处理错误的回调，这样你就不会得到错误提示。至少你应该在你的最后一个 promise 里加上错误回调。关于这个问题你可以查看下文“ promise可能会‘吃掉’错误”一节的内容</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>使用 promise 时，很容易忽略处理错误的回调，这样你就不会得到错误提示。至少你应该在你的最后一个 promise 里加上错误回调。关于这个问题你可以查看下文“ promise可能会‘吃掉’错误”一节的内容<br>&gt;</p>
 </blockquote>
 <h3 id="未知错误应该归纳到-Reject"><a href="#未知错误应该归纳到-Reject" class="headerlink" title="未知错误应该归纳到 Reject"></a><a name="未知错误应该归纳到Reject">未知错误应该归纳到 Reject</a></h3><p>目前，我们的错误处理只针对已知错误。可能有未知的异常出现，就会导致程序崩溃，所以有必要在实现 promise 时对意外作出正确的 reject，即在 <code>resolve()</code> 方法里加入 <code>try/catch</code> ：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">resolve</span>(<span class="params">newValue</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// ... as before</span></span><br><span class="line">  &#125; <span class="keyword">catch</span>(e) &#123;</span><br><span class="line">    reject(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>此外，还得确保传入 <code>handle()</code> 回调方法也不会抛出异常：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">handle</span>(<span class="params">deferred</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// ... as before</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">var</span> ret;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    ret = handlerCallback(value);</span><br><span class="line">  &#125; <span class="keyword">catch</span>(e) &#123;</span><br><span class="line">    handler.reject(e);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  handler.resolve(ret);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
@@ -601,18 +569,10 @@
 <p><a href="http://jsfiddle.net/city41/M7SRM/3/" target="_blank" rel="noopener">fiddle</a></p>
 <p>这段代码将会发生什么？<code>then()</code> 方法里的回调期望得到的是一个 JSON 对象，就天真地把结果当作 JSON 来解析，导致发生异常。虽然我们已经有了处理错误的回调，但管用吗？</p>
 <blockquote>
-<blockquote>
-</blockquote>
-<p>实际上，错误回调并没有被调用，如果你在 fiddle 上运行这段代码，你不会得到任何输出，没有错误，什么都没有。</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>实际上，错误回调并没有被调用，如果你在 fiddle 上运行这段代码，你不会得到任何输出，没有错误，什么都没有。<br>&gt;</p>
 </blockquote>
 <p>为什么会出现这种情况？因为未处理的异常发生在 <code>then()</code> 的回调方法里，它是在 <code>handle()</code> 方法里被捕获的。这导致 <code>hande()</code> 方法 reject 了 <code>then()</code> 返回的 promise，而不是正在处理的 promise，整个过程就像 promise 被正确的 resolve 一样。</p>
-<blockquote>
-</blockquote>
-<p>记住，在 <code>then()</code> 的回调里，你正在响应的 promise 已经被 resolve，所以你的回调方法对这个 promise 没有影响</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>记住，在 <code>then()</code> 的回调里，你正在响应的 promise 已经被 resolve，所以你的回调方法对这个 promise 没有影响<br>&gt;</p>
 <p>如果你想捕获上面的那个错误，需要在下游加一个错误处理：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">getSomeJson().then(<span class="function"><span class="keyword">function</span>(<span class="params">json</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> obj = <span class="built_in">JSON</span>.parse(json);</span><br><span class="line">  <span class="built_in">console</span>.log(obj);</span><br><span class="line">&#125;).then(<span class="literal">null</span>, <span class="function"><span class="keyword">function</span>(<span class="params">error</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">"an error occured: "</span>, error);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
 <p>这样就可以打印处错误日志了。</p>
 <blockquote>
@@ -636,11 +596,7 @@
 <p>这段代码程序调用的流程是怎样的？从字面理解，你可能认为是 <code>invokeSomething()</code> -&gt; <code>invokeSomethingElse()</code> -&gt; <code>wrapItAllUp()</code>。实际上却是取决于 promise 的 resolve 是同步还是异步的。如果 <code>doAnOperation()</code> 是异步的，流程和预想的一样。但是，如果 <code>doAnOperation()</code> 是同步的，流程就会变成：<code>invokeSomething()</code> -&gt; <code>wrapItAllUp()</code> -&gt; <code>invokeSomethingElse()</code>，这样就不好了。</p>
 <p>为了避开这种情况，promise 必须异步地 resolve，即使是你并不需要。这样会减少意外发生，别人在使用 promise 的时候也不用考虑同步还是异步。</p>
 <blockquote>
-<blockquote>
-</blockquote>
-<p>Promises always require at least one more iteration of the event loop to resolve. This is not necessarily true of the standard callback approach.</p>
-<blockquote>
-</blockquote>
+<p>&gt;<br>Promises always require at least one more iteration of the event loop to resolve. This is not necessarily true of the standard callback approach.<br>&gt;</p>
 </blockquote>
 <h2 id="准备封装-then-promise-之前"><a href="#准备封装-then-promise-之前" class="headerlink" title="准备封装 then/promise 之前"></a><a name="准备封装then/promise之前">准备封装 then/promise 之前</a></h2><p>目前市面上已经有许多特性齐全的 promise 库。<a href="https://github.com/then" target="_blank" rel="noopener">then</a> 组织的 promise 库是最简单的。它的目的就是，以最简省的方法实现一个符合 Promises/A+ 规范的 promise 库，如果你看看它的实现方法，会发现看起来很眼熟。</p>
 <blockquote>

@@ -355,7 +355,7 @@
                 
               
 
-              <time title="创建时间：2020-01-03 00:28:45 / 修改时间：01:03:42" itemprop="dateCreated datePublished" datetime="2020-01-03T00:28:45+08:00">2020-01-03</time>
+              <time title="创建时间：2020-01-03 00:28:45 / 修改时间：11:03:23" itemprop="dateCreated datePublished" datetime="2020-01-03T00:28:45+08:00">2020-01-03</time>
             
 
             
@@ -446,11 +446,11 @@ P_{n+1} = P_n \displaystyle \frac{k-2}{k} + (1-P_n)\displaystyle \frac{2}{k(k-1)
 <script type="math/tex; mode=display">
 P_n= \displaystyle \frac{1}{k} + (\displaystyle \frac{k-3}{k-1})^n\displaystyle \frac{k-1}{k}</script><p>因为$(\displaystyle \frac{k-3}{k-1})^n\displaystyle \frac{k-1}{k}$ 不等于 0， 所以 $P_n \neq \displaystyle \frac{1}{k} $ ，即这个算法不是不是真正的随机。</p>
 <p>假如每次交换都是两个不同的元素，那 naive shuffle的概率问题就完美地解决了。但是，这个假设不能覆盖所有的情况：因为根据算法，<strong>每次元素交换时，有可能是元素和自身交换</strong>，因此不完全是组合问题。</p>
-<h2 id="尝试更完整地分析这个问题"><a href="#尝试更完整地分析这个问题" class="headerlink" title="尝试更完整地分析这个问题"></a>尝试更完整地分析这个问题</h2><p>根据上面，我个人分析，第一种情况最后一次交换的概率应该是$\frac{(k-1)^2}{k^2}$，第二种情况的则是$\frac{2}{k^2}$ </p>
+<h3 id="尝试更完整地分析这个问题"><a href="#尝试更完整地分析这个问题" class="headerlink" title="尝试更完整地分析这个问题"></a>尝试更完整地分析这个问题</h3><p>根据上面，我个人分析，第一种情况最后一次交换的概率应该是，其它元素互相交换的概率$\frac{(k-1)^2}{k^2}$ ，加上元素自己和自己交换的概率 $1/k^2$；第二种情况的则是$\frac{2}{k^2}$ </p>
 <script type="math/tex; mode=display">
-P_{n+1} = P_n \displaystyle \frac{(k-1)^2}{k^2} + (1-P_n)\displaystyle \frac{2}{k^2}</script><p>经过转换后可以得到：</p>
+P_{n+1} = P_n \displaystyle \frac{(k-1)^2+1}{k^2} + (1-P_n)\displaystyle \frac{2}{k^2}</script><p>经过转换后可以得到：</p>
 <script type="math/tex; mode=display">
-P_n= \displaystyle \frac{2}{2k+1} + (\displaystyle \frac{k^2-2k-1}{k^2})^n\displaystyle \frac{2k-1}{2k+1}</script><p>这个结果也是不等于 $1/k$ ，可以设 k=3， n=1 ，得到 $P_1 = 28/63 \ne 1/3$，故 naive shuffle 在随机概率上不够公平。</p>
+P_n= \displaystyle \frac{1}{k-1} + (\displaystyle \frac{（k-1）^2-1}{k^2})^n\displaystyle \frac{k-2}{k-1}</script><p>这个结果也是不等于 $1/k$ ，可以设 k=3， n=1 ，得到 $P_1 = 2/3 \ne 1/3$，故 naive shuffle 在随机概率上不够公平。</p>
 <p>当然，这个解法是否可靠，以后有时间还要继续审查。</p>
 <p><a href="https://stats.stackexchange.com/a/3087" target="_blank" rel="noopener">stackexchange</a> 提到另一个思路：</p>
 <p><em>This problem can be analyzed fully as a Markov chain on the Cayley graph of the permutation group.</em></p>
