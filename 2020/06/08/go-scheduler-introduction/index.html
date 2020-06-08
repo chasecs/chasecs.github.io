@@ -96,20 +96,20 @@
 
 
 
-  <meta name="description" content="注：本文涉及的源码为 go 1.13 版本 最近一直在看 Go 调度器的源码，查了不少资料，对其工作方式有了一些了解，也对 Go 如何支撑高并发、并行计算的多了一点认识。 Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocato">
+  <meta name="description" content="注：本文涉及的源码为 go 1.13 版本 最近一直在看 Go 调度器的源码，查了不少资料，对它的工作方式有了一些了解，也对 Go 如何支撑高并发、并行计算有个更直观的认识。 Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory alloca">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Go 源码分析：scheduler 工作流程">
 <meta property="og:url" content="https://chasecs.github.io/2020/06/08/go-scheduler-introduction/index.html">
 <meta property="og:site_name" content="编程日志">
-<meta property="og:description" content="注：本文涉及的源码为 go 1.13 版本 最近一直在看 Go 调度器的源码，查了不少资料，对其工作方式有了一些了解，也对 Go 如何支撑高并发、并行计算的多了一点认识。 Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocato">
+<meta property="og:description" content="注：本文涉及的源码为 go 1.13 版本 最近一直在看 Go 调度器的源码，查了不少资料，对它的工作方式有了一些了解，也对 Go 如何支撑高并发、并行计算有个更直观的认识。 Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory alloca">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://chasecs.github.io/images/go-scheduler-introduction/image-20200608114518442.png">
 <meta property="og:image" content="https://chasecs.github.io/images/go-scheduler-introduction/image-20200607224537595.png">
 <meta property="og:image" content="https://chasecs.github.io/images/go-scheduler-introduction/image-20200608004720164.png">
-<meta property="og:updated_time" content="2020-06-08T08:06:10.048Z">
+<meta property="og:updated_time" content="2020-06-08T08:09:31.417Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Go 源码分析：scheduler 工作流程">
-<meta name="twitter:description" content="注：本文涉及的源码为 go 1.13 版本 最近一直在看 Go 调度器的源码，查了不少资料，对其工作方式有了一些了解，也对 Go 如何支撑高并发、并行计算的多了一点认识。 Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocato">
+<meta name="twitter:description" content="注：本文涉及的源码为 go 1.13 版本 最近一直在看 Go 调度器的源码，查了不少资料，对它的工作方式有了一些了解，也对 Go 如何支撑高并发、并行计算有个更直观的认识。 Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory alloca">
 <meta name="twitter:image" content="https://chasecs.github.io/images/go-scheduler-introduction/image-20200608114518442.png">
 
 
@@ -360,7 +360,7 @@
                 
               
 
-              <time title="创建时间：2020-06-08 13:02:44 / 修改时间：16:06:10" itemprop="dateCreated datePublished" datetime="2020-06-08T13:02:44+08:00">2020-06-08</time>
+              <time title="创建时间：2020-06-08 13:02:44 / 修改时间：16:09:31" itemprop="dateCreated datePublished" datetime="2020-06-08T13:02:44+08:00">2020-06-08</time>
             
 
             
@@ -418,7 +418,7 @@
 
       
         <p><em>注：本文涉及的源码为 go 1.13 版本</em></p>
-<p>最近一直在看 Go 调度器的源码，查了不少资料，对其工作方式有了一些了解，也对 Go 如何支撑高并发、并行计算的多了一点认识。</p>
+<p>最近一直在看 Go 调度器的源码，查了不少资料，对它的工作方式有了一些了解，也对 Go 如何支撑高并发、并行计算有个更直观的认识。</p>
 <p>Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocator/garbage collector）<a href="https://www.quora.com/How-does-the-Go-runtime-work-What-does-it-consist-of-What-functionalities-does-it-provide-and-what-can-be-expected-from-a-developer-perspective" target="_blank" rel="noopener">1</a> 。</p>
 <p>调度器相关的代码主要在 <code>runtime</code> 的 <code>proc.go</code> ， <code>runtime1.go</code> ， <code>runtime2.go</code> 等几个文件，此外还有一些 Go 汇编代码，这些代码大部分在 2015 年成形，至今没有大的修改，目前看来还是比较稳定的。</p>
 <h2 id="三个核心概念-GMP"><a href="#三个核心概念-GMP" class="headerlink" title="三个核心概念 GMP"></a>三个核心概念 GMP</h2><p>在 Go 调度器的世界里，有三个主要的角色：M，P，G，调度过程基本围绕这三兄弟展开。</p>
