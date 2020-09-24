@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="提要  5 种 I/O 模型及一些示例 目前主流的I/O 方案 epoll / kqueue">
+<meta name="keywords" content="unix">
+<meta property="og:type" content="article">
+<meta property="og:title" content="聊一聊 Unix I&#x2F;O 主要模型">
+<meta property="og:url" content="https://chasecs.github.io/2020/09/24/unix-io-introduction/index.html">
+<meta property="og:site_name" content="编程札记">
+<meta property="og:description" content="提要  5 种 I/O 模型及一些示例 目前主流的I/O 方案 epoll / kqueue">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.masterraghu.com/subjects/np/introduction/unix_network_programming_v1.3/files/06fig06.gif">
+<meta property="og:updated_time" content="2020-09-23T17:02:57.915Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="聊一聊 Unix I&#x2F;O 主要模型">
+<meta name="twitter:description" content="提要  5 种 I/O 模型及一些示例 目前主流的I/O 方案 epoll / kqueue">
+<meta name="twitter:image" content="http://www.masterraghu.com/subjects/np/introduction/unix_network_programming_v1.3/files/06fig06.gif">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://chasecs.github.io/2020/09/24/unix-io-introduction/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>聊一聊 Unix I/O 主要模型 | 编程札记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">编程札记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/chasecs" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2020/09/24/unix-io-introduction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程札记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">聊一聊 Unix I/O 主要模型
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2020-09-24 00:53:58 / 修改时间：01:02:57" itemprop="dateCreated datePublished" datetime="2020-09-24T00:53:58+08:00">2020-09-24</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>提要</strong></p>
+<ul>
+<li>5 种 I/O 模型及一些示例</li>
+<li>目前主流的I/O 方案 epoll / kqueue</li>
+</ul>
+<a id="more"></a>
+<p>在 Unix 系统里，磁盘的文件读写、网络通讯等功能的核心部分都是 I/O， open， read ， write ，connect 等系统调用都属于 I/O 操作。因为 I/O 操作都比较耗时，因此有了阻塞、非阻塞、同步、异步等不同 I/O 模型。</p>
+<p>I/O 操作引发的阻塞是指进程中断执行，等待其它的工作（通常是比较耗时的）准备就绪再恢复。阻塞可能出现在两个阶段：</p>
+<ul>
+<li>阶段一：等待数据就绪（例如从硬盘读取数据完成）</li>
+<li>阶段二：把数据从内核复制到用户空间</li>
+</ul>
+<p>按照《Unix Network Programming》（下称 UNP）的分类，Unix 有 5 种 I/O 模型：</p>
+<ul>
+<li>阻塞式 I/O （ Blocking I/O）</li>
+<li>非阻塞式 I/O （NonBlocking I/O）</li>
+<li>I/O 复用 （I/O multiplexing）</li>
+<li>信号驱动 I/O ( signal-driven I/O )</li>
+<li>异步 I/O （asynchronous I/O )</li>
+</ul>
+<p>他们在上述两个阶段的阻塞情况和处理方式有所差别。</p>
+<p><img src="http://www.masterraghu.com/subjects/np/introduction/unix_network_programming_v1.3/files/06fig06.gif" alt="graphics/06fig06.gif"></p>
+<p>UNP对I/O模型的分类比较严格，认为只有前4个都属于同步的（synchronous），只有第5个属于异步（asynchronous）。</p>
+<p>不过，目前网上也有很多说法认为把 I/O 复用，epoll，kqueue 归为异步 I/O，如下表：</p>
+<p>虽然在分类上有不通的说法，但弄清楚 I/O 最关键的阻塞、非阻塞等概念，对于理解各种不同的 I/O 方案就没有太大问题。</p>
+<h2 id="阻塞式-I-O-（-Blocking-I-O）"><a href="#阻塞式-I-O-（-Blocking-I-O）" class="headerlink" title="阻塞式 I/O （ Blocking I/O）"></a>阻塞式 I/O （ Blocking I/O）</h2><p>阻塞式是最原始的 I/O 模型，默认情况下，包括 read、 write、connect、accept 等的 I/O 操作默认都是阻塞式的。</p>
+<p>阻塞式 I/O，当系统调用（如下面代码中的 <code>write</code> )执行后，进程会停止继续执行，直到该系统调用完成工作（<code>write</code>写入数据），进程才继续执行之后的代码。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"apue.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;time.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> buf[<span class="number">500000</span>];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ntowrite, nwrite;</span><br><span class="line">    <span class="keyword">char</span> *ptr;</span><br><span class="line"></span><br><span class="line">    ntowrite = read(STDIN_FILENO, buf, <span class="keyword">sizeof</span>(buf));</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"read %d bytes\n"</span>, ntowrite);</span><br><span class="line"></span><br><span class="line">    ptr = buf;</span><br><span class="line">    <span class="keyword">while</span> (ntowrite &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        errno = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">clock_t</span> begin = clock();</span><br><span class="line">	      <span class="comment">//write is blocking</span></span><br><span class="line">        nwrite = write(STDOUT_FILENO, ptr, ntowrite);</span><br><span class="line">        <span class="keyword">clock_t</span> end = clock();</span><br><span class="line">				<span class="comment">//counting time consumed by write() </span></span><br><span class="line">        <span class="keyword">double</span> time_spent = (<span class="keyword">double</span>)(end - begin) / CLOCKS_PER_SEC;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"\nnwrite = %d, errno = %d, time = %f\n"</span>, nwrite, errno, time_spent);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (nwrite &gt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            ptr += nwrite;</span><br><span class="line">            ntowrite -= nwrite;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译上述代码，然后找一个测试文件运行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ gcc -o blk blocking.c</span><br><span class="line">$ ./blk &lt; test_file</span><br></pre></td></tr></table></figure>
+<p>可以看到输出以下结果（nwrite 的数值因测试文件的不同有差异）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nwrite = 30015, errno = 0, time = 0.000371</span><br></pre></td></tr></table></figure>
+<p>可以看到 write 花费的时间是  0.000371 秒，在这段时间内，进程是阻塞的。</p>
+<p><strong>阻塞式 I/O 很难应对高并发的应用场景</strong>，因为每次阻塞，都有一个进程被搁置起来，直到完成工作，才会去处理下一个请求。</p>
+<h2 id="非阻塞式-I-O-（NonBlocking-I-O）"><a href="#非阻塞式-I-O-（NonBlocking-I-O）" class="headerlink" title="非阻塞式 I/O （NonBlocking I/O）"></a>非阻塞式 I/O （NonBlocking I/O）</h2><p>在非阻塞式模型下，I/O 操作启动后，如果工作还未完成，内核会马上返回一个错误消息（EWOULDBLOCK或者EAGAIN 等) ，而不是像阻塞式一样等到完成工作再交出进程。</p>
+<p>非阻塞式 I/O 可以通过 <code>fcntl</code> 函数修改“文件描述符”实现， 例如改造上文例子的 <code>STDOUT_FILEN</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">flags = fcntl(STDOUT_FILEN, F_GETFL);</span><br><span class="line">flags &amp;= ~O_NONBLOCK;</span><br><span class="line">fcntl(STDOUT_FILEN, F_SETFL, flags);</span><br></pre></td></tr></table></figure>
+<p>改成非阻塞之后的主要代码如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    set_fl(STDOUT_FILENO, O_NONBLOCK); <span class="comment">/* set nonblocking */</span></span><br><span class="line"></span><br><span class="line">    ptr = buf;</span><br><span class="line">    <span class="keyword">while</span> (ntowrite &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        errno = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">clock_t</span> begin = clock();</span><br><span class="line">        <span class="comment">//write is non-blocking now</span></span><br><span class="line">        nwrite = write(STDOUT_FILENO, ptr, ntowrite);</span><br><span class="line">        <span class="keyword">clock_t</span> end = clock();</span><br><span class="line">        <span class="keyword">double</span> time_spent = (<span class="keyword">double</span>)(end - begin) / CLOCKS_PER_SEC;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"nwrite = %d, errno = %d, time = %f\n"</span>, nwrite, errno, time_spent);</span><br><span class="line"></span><br><span class="line">				...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    clr_fl(STDOUT_FILENO, O_NONBLOCK); <span class="comment">/* clear nonblocking */</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">set_fl</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">int</span> flags)</span> <span class="comment">/* flags are file status flags to turn on */</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> val;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((val = fcntl(fd, F_GETFL, <span class="number">0</span>)) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"fcntl F_GETFL error"</span>);</span><br><span class="line"></span><br><span class="line">    val |= flags; <span class="comment">/* turn on flags */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (fcntl(fd, F_SETFL, val) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"fcntl F_SETFL error"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">clr_fl</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">int</span> flags)</span> <span class="comment">/* flags are file status flags to turn off */</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> val;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((val = fcntl(fd, F_GETFL, <span class="number">0</span>)) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"fcntl F_GETFL error"</span>);</span><br><span class="line"></span><br><span class="line">    val &amp;= ~flags; <span class="comment">/* turn flags off */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (fcntl(fd, F_SETFL, val) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"fcntl F_SETFL error"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译上述代码，然后找一个测试文件运行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ gcc -o nblk nonblocking.c</span><br><span class="line">$ ./nblk &lt; test_file 2&gt;<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+<p>打开 log 日志可以看到类似下面的结果</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read</span> 30015 bytes</span><br><span class="line">nwrite = 989, errno = 0, time = 0.000019</span><br><span class="line">nwrite = -1, errno = 35, time = 0.000002</span><br><span class="line">nwrite = -1, errno = 35, time = 0.000002</span><br><span class="line">....</span><br><span class="line">nwrite = 995, errno = 0, time = 0.000006</span><br><span class="line">nwrite = -1, errno = 35, time = 0.000002</span><br><span class="line">....</span><br><span class="line">nwrite = -1, errno = 35, time = 0.000001</span><br><span class="line">nwrite = 993, errno = 0, time = 0.000006</span><br><span class="line">..</span><br></pre></td></tr></table></figure>
+<p>在非阻塞模式下，每次write 的响应时间快了很多，没有数据的时候会返回 errno =35 (对应 EAGAIN），然后去轮询 write 的结果。<strong>这种非阻塞模式，对 CPU 的消耗比较大，因此并没有被广泛应用。</strong></p>
+<h2 id="I-O-复用-（I-O-multiplexing）"><a href="#I-O-复用-（I-O-multiplexing）" class="headerlink" title="I/O 复用 （I/O multiplexing）"></a>I/O 复用 （I/O multiplexing）</h2><p>multiplexing 使用 select、 poll 等函数实现，<strong>使阻塞发生在 select 等函数里，而不是阻塞进程。</strong></p>
+<p>select 可以<strong>同时监听多个文件描述符</strong>，它执行后会处于等待状态，当有一个或者多个文件描述符变成“就绪”状态，就会继续向下执行，如此循环。</p>
+<p>以下是使用 select 处理 socket I/O 的代码片段：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">		<span class="keyword">int</span> fds[<span class="number">5</span>];</span><br><span class="line">    fd_set rset;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">memset</span>(&amp;client, <span class="number">0</span>, <span class="keyword">sizeof</span>(client));</span><br><span class="line">        addrlen = <span class="keyword">sizeof</span>(client);</span><br><span class="line"><span class="comment">// 添加 5 个文件描述符</span></span><br><span class="line">        fds[i] = accept(sockfd, (struct sockaddr *)&amp;client, &amp;addrlen);</span><br><span class="line">        <span class="keyword">if</span> (fds[i] &gt; max)</span><br><span class="line">            max = fds[i];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        FD_ZERO(&amp;rset);</span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++)</span><br><span class="line">        &#123;</span><br><span class="line">            FD_SET(fds[i], &amp;rset);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">puts</span>(<span class="string">"round again"</span>);</span><br><span class="line"></span><br><span class="line">				<span class="comment">//select 监听全部5个 fd，当有一个或以上 fd 就绪时，就会向下执行</span></span><br><span class="line">        select(max + <span class="number">1</span>, &amp;rset, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++)</span><br><span class="line">        &#123;</span><br><span class="line">					<span class="comment">//判断是哪一个 fd 符合可读状态，执行 read</span></span><br><span class="line">            <span class="keyword">if</span> (FD_ISSET(fds[i], &amp;rset))</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="built_in">memset</span>(buffer, <span class="number">0</span>, MAXBUF);</span><br><span class="line">                read(fds[i], buffer, MAXBUF);</span><br><span class="line">                <span class="built_in">puts</span>(buffer);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>poll 的处理方法与 select 类似，不过它们属于比较早期的方案。现在<strong>广泛使用的方案性能表现更好的 epoll（linux 平台） ， kqueue（ FreeBSD，MacOS）。</strong></p>
+<h2 id="信号驱动-I-O-signal-driven-I-O"><a href="#信号驱动-I-O-signal-driven-I-O" class="headerlink" title="信号驱动 I/O ( signal-driven I/O )"></a>信号驱动 I/O ( signal-driven I/O )</h2><p>信号驱动 I/O模型下，启动操作后，内核会在文件描述符准备就绪时发出信号，我们要根据收到的不同信号，作相应的处理，在等待信号期间进程不阻塞。</p>
+<p>实现信号驱动有三个步骤：</p>
+<ol>
+<li>设置接受信号的进程，将它和发出信号文件描述符 fd 绑定：<code>fcntl(fd, F_SETOWN, pid)</code></li>
+<li>创建信号处理方法，例如 <code>sa.sa_handler = sigioHandler;</code></li>
+<li>使用 <code>sigaction</code> 函数监听信号（如 SIGIO 信号 ）： <code>sigaction(SIGIO, &amp;sa, NULL)</code></li>
+</ol>
+<p>以 write 为例，使用 signal I/O 的关键代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">volatile</span> <span class="keyword">sig_atomic_t</span> gotSigio = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sigioHandler</span><span class="params">(<span class="keyword">int</span> sig)</span></span>&#123;</span><br><span class="line">    gotSigio = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> main &#123;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">sigaction</span> <span class="title">sa</span>;</span></span><br><span class="line">		<span class="comment">/* Establish handler for "I/O possible" signal */</span></span><br><span class="line">		sigemptyset(&amp;sa.sa_mask);</span><br><span class="line">		sa.sa_flags = SA_RESTART;</span><br><span class="line">		sa.sa_handler = sigioHandler;</span><br><span class="line">		<span class="comment">// On Linux platform</span></span><br><span class="line">		<span class="keyword">if</span> (sigaction(SIGIO, &amp;sa, <span class="literal">NULL</span>) == <span class="number">-1</span>)</span><br><span class="line">		    <span class="built_in">printf</span>(<span class="string">"sigaction"</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="comment">/* 设置当前进程作为信号的接受者 */</span></span><br><span class="line">		<span class="keyword">if</span> (fcntl(STDOUT_FILENO, F_SETOWN, getpid()) == <span class="number">-1</span>)</span><br><span class="line">		    <span class="built_in">printf</span>(<span class="string">"fcntl(F_SETOWN)"</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="comment">/* 启动信号功能，设置非阻塞 */</span></span><br><span class="line">		set_fl(STDOUT_FILENO, O_ASYNC | O_NONBLOCK);</span><br><span class="line"></span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">while</span> (ntowrite &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">       ...</span><br><span class="line">        <span class="keyword">if</span> (gotSigio)</span><br><span class="line">        &#123;</span><br><span class="line">            gotSigio = <span class="number">0</span>;</span><br><span class="line">            ....</span><br><span class="line">            nwrite = write(STDOUT_FILENO, ptr, ntowrite);</span><br><span class="line">           </span><br><span class="line">					....</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>信号驱动 I/O 在应用上并不是很流行，网上一些资料和《The Linux Programming Interface 》（p1355）一书提到，epoll 信号驱动I/O 和 epoll 性能相近，但是有一些劣势，比如，信号处理复杂，因为信号种类繁多，每种都要处理；需要 non-blocking 配合使用。</p>
+<p>除此之外，因为无法传参数到 sa_handler 里，只能在里面修改全局变量，使用非常不方便。像上面的例子，只能在接收到信号时修改全局变量 <code>gotSigio</code>，然后再去轮询  <code>gotSigio</code> 是否变化，十分低效。</p>
+<h2 id="异步-I-O（asynchronous-I-O"><a href="#异步-I-O（asynchronous-I-O" class="headerlink" title="异步 I/O（asynchronous I/O )"></a>异步 I/O（asynchronous I/O )</h2><p>在 UNP 一书的定义里，异步I/O 是指操作启动后，内核<strong>完全处理好这个操作（包括第一、第二阶段）</strong>，再通知进程。</p>
+<p>符合这个要求的库在 linux 平台有 <code>aio</code> ，不过貌似有一些缺陷，没有太多应用。在 windows 平台，则有比较成熟的 <code>iocp</code> 接口。 <code>iocp</code> 也是 windows 处理 I/O 操作的最流行的方案。</p>
+<h2 id="Linux-当前最流行的I-O方案：epoll，kqueue"><a href="#Linux-当前最流行的I-O方案：epoll，kqueue" class="headerlink" title="Linux 当前最流行的I/O方案：epoll，kqueue"></a>Linux 当前最流行的I/O方案：epoll，kqueue</h2><p>*inux 平台目前最主要的 I/O 方案是 <code>epoll</code> （Linux）和 <code>kqueue</code> （BSD等），它们的性能表现最好。</p>
+<p>以 <code>kqueue</code> 为例，它的处理步骤主要是：</p>
+<ol>
+<li>声明一个队列 </li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> kq = kqueue();</span><br></pre></td></tr></table></figure>
+<ol>
+<li>声明并初始化要监听的事件 evSet ：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kevent</span> <span class="title">evSet</span>;</span></span><br><span class="line">  <span class="comment">//给 evSet 赋值</span></span><br><span class="line">  EV_SET(&amp;evSet, localFd, EVFILT_READ, EV_ADD, <span class="number">0</span>, <span class="number">0</span>, <span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+<ol>
+<li>把事件添加到队列中（可以添加多个的不同事件）</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kevent(kq, &amp;evSet, <span class="number">1</span>, <span class="literal">NULL</span>, <span class="number">0</span>, <span class="literal">NULL</span>)</span><br></pre></td></tr></table></figure>
+<ol>
+<li>当有一个以上的事件就绪时，读取事件并做相应处理</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> nev = kevent(kq, <span class="literal">NULL</span>, <span class="number">0</span>, evList, <span class="number">32</span>, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nev; i++)&#123;</span><br><span class="line">		<span class="keyword">int</span> fd = (<span class="keyword">int</span>)evList[i].ident;</span><br><span class="line">		<span class="keyword">if</span> (evList[i].flags &amp; EV_EOF)&#123;</span><br><span class="line">			  <span class="built_in">printf</span>(<span class="string">"Disconnect\n"</span>);</span><br><span class="line">        close(fd);</span><br><span class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span> (...)&#123;</span><br><span class="line"></span><br><span class="line">		&#125;</span><br><span class="line">	.....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>epoll</code> 和 <code>kqueue</code> 类似，它们的处理方式和上文 <code>select</code> 很像，都是把多个文件描述符放到一个监听队列里，当有一个以上事件就绪时，再处理相应的事件。<code>epoll</code> 和 <code>kqueue</code> 优势是对队列事件的处理更加高效。</p>
+<p>目前，包括 <strong>Nodejs 的底层 I/O 库 <a href="http://docs.libuv.org/en/v1.x/index.html" target="_blank" rel="noopener">libuv</a> 和 Golang 的 netpoll ，在 *inux 平台使用的方案都是 epoll 和 kqueue 。</strong></p>
+<p>以 netpoll 为例，I/O 操作最后是交给 epoll 等接口。和直接使用原生 epoll 接口不同的是，golang 是在 goroutine 层面进行这一 I/O 操作，当流程进入 epoll 等接口之后，当前 goroutine 变成阻塞状态，等待 I/O 完成后，再被重新调度。</p>
+<p>最后，除了本文已经提到的接口，还有其它的一些 I/O 方案存在，今年以来，linux 平台新近出现的 I/O 接口 <code>io_uring</code> 受到不少关注，包括 libuv 等都在尝试引入 <code>io_uring</code> 接口，值得继续留意。</p>
+<p>文章涉及的代码示例存放在： <a href="https://github.com/chasecs/io-playground" target="_blank" rel="noopener">io-playground</a></p>
+<h2 id="参考资料："><a href="#参考资料：" class="headerlink" title="参考资料："></a>参考资料：</h2><p>nonblocking</p>
+<p><a href="http://www.cs.columbia.edu/~jae/4118/L08-adv-io.html" target="_blank" rel="noopener">http://www.cs.columbia.edu/~jae/4118/L08-adv-io.html</a></p>
+<p>select，epoll</p>
+<p><a href="https://devarea.com/linux-io-multiplexing-select-vs-poll-vs-epoll/#.X0YjxhMzZTY" target="_blank" rel="noopener">LINUX – IO MULTIPLEXING – SELECT VS POLL VS EPOLL</a></p>
+<p><a href="https://eklitzke.org/blocking-io-nonblocking-io-and-epoll" target="_blank" rel="noopener">https://eklitzke.org/blocking-io-nonblocking-io-and-epoll</a></p>
+<p>Blocking vs. non-blocking sockets</p>
+<p>[<a href="https://www.scottklement.com/rpg/socktut/nonblocking.html" target="_blank" rel="noopener">https://www.scottklement.com/rpg/socktut/nonblocking.html</a></p>
+<p>signal I/O</p>
+<p><a href="https://www.man7.org/tlpi/code/online/diff/altio/demo_sigio.c.html" target="_blank" rel="noopener">https://www.man7.org/tlpi/code/online/diff/altio/demo_sigio.c.html</a></p>
+<p><a href="http://www.cs.fsu.edu/~xyuan/cop5570/lect19_signaldrivenio-1.pptx" target="_blank" rel="noopener">http://www.cs.fsu.edu/~xyuan/cop5570/lect19_signaldrivenio-1.pptx</a></p>
+<p>讨论 signal I/O 为何无法传参到 signal_handler</p>
+<p><a href="https://stackoverflow.com/questions/6970224/providing-passing-argument-to-signal-handler" target="_blank" rel="noopener">https://stackoverflow.com/questions/6970224/providing-passing-argument-to-signal-handler</a></p>
+<p>io_uring</p>
+<p><a href="https://kernel.dk/io_uring.pdf" target="_blank" rel="noopener">https://kernel.dk/io_uring.pdf</a></p>
+<p><a href="https://lwn.net/Articles/810414/" target="_blank" rel="noopener">https://lwn.net/Articles/810414/</a></p>
+<p><a href="https://stackoverflow.com/questions/13407542/is-there-really-no-asynchronous-block-i-o-on-linux" target="_blank" rel="noopener">https://stackoverflow.com/questions/13407542/is-there-really-no-asynchronous-block-i-o-on-linux</a></p>
+<p><a href="https://www.scottklement.com/rpg/socktut/nonblocking.html" target="_blank" rel="noopener">https://www.scottklement.com/rpg/socktut/nonblocking.html</a>)</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/unix/" rel="tag"># unix</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/22/golang-network-programming-implementation/" rel="next" title="Go 网络编程的实现">
+                <i class="fa fa-chevron-left"></i> Go 网络编程的实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ttimehc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/chasecs" title="GitHub &rarr; https://github.com/chasecs" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:ttimehc@gmail.com" title="E-Mail &rarr; mailto:ttimehc@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#阻塞式-I-O-（-Blocking-I-O）"><span class="nav-number">1.</span> <span class="nav-text">阻塞式 I/O （ Blocking I/O）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#非阻塞式-I-O-（NonBlocking-I-O）"><span class="nav-number">2.</span> <span class="nav-text">非阻塞式 I/O （NonBlocking I/O）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#I-O-复用-（I-O-multiplexing）"><span class="nav-number">3.</span> <span class="nav-text">I/O 复用 （I/O multiplexing）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信号驱动-I-O-signal-driven-I-O"><span class="nav-number">4.</span> <span class="nav-text">信号驱动 I/O ( signal-driven I/O )</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#异步-I-O（asynchronous-I-O"><span class="nav-number">5.</span> <span class="nav-text">异步 I/O（asynchronous I/O )</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-当前最流行的I-O方案：epoll，kqueue"><span class="nav-number">6.</span> <span class="nav-text">Linux 当前最流行的I/O方案：epoll，kqueue</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料："><span class="nav-number">7.</span> <span class="nav-text">参考资料：</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ttimehc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'eb2224abc6c383a0371e',
+    clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+    repo: 'chasecs.github.io',
+    owner: 'chasecs',
+    admin: ['chasecs'],
+    id: md5(location.pathname),
+    
+      language: 'en, zh-CN',
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

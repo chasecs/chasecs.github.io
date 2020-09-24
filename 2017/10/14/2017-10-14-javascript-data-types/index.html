@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="结合 lodash 源码，总结下判断 js 数据类型的方法，还有一点未解的困惑">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript 数据类型判断">
+<meta property="og:url" content="https://chasecs.github.io/2017/10/14/2017-10-14-javascript-data-types/index.html">
+<meta property="og:site_name" content="编程札记">
+<meta property="og:description" content="结合 lodash 源码，总结下判断 js 数据类型的方法，还有一点未解的困惑">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-08-09T02:58:17.475Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JavaScript 数据类型判断">
+<meta name="twitter:description" content="结合 lodash 源码，总结下判断 js 数据类型的方法，还有一点未解的困惑">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://chasecs.github.io/2017/10/14/2017-10-14-javascript-data-types/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>JavaScript 数据类型判断 | 编程札记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">编程札记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/chasecs" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2017/10/14/2017-10-14-javascript-data-types/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程札记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JavaScript 数据类型判断
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2017-10-14 00:00:00" itemprop="dateCreated datePublished" datetime="2017-10-14T00:00:00+08:00">2017-10-14</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-09 10:58:17" itemprop="dateModified" datetime="2019-08-09T10:58:17+08:00">2019-08-09</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/javascript/" itemprop="url" rel="index"><span itemprop="name">javascript</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+            <div class="post-description">结合 lodash 源码，总结下判断 js 数据类型的方法，还有一点未解的困惑</div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>JavaScript 的数据类型可以分为两大类： primitive 类型和 object 类型。</p>
+<p>primitive 类型（原始类型）包括：</p>
+<ul>
+<li>number</li>
+<li>string  </li>
+<li>boolean</li>
+<li>undefinded</li>
+<li>null</li>
+<li>Symbol（ ES6 新增）</li>
+</ul>
+<p>除了 primitive，其余的都是 object（对象）</p>
+<h2 id="一、第一种方法-typeof"><a href="#一、第一种方法-typeof" class="headerlink" title="一、第一种方法 typeof"></a>一、第一种方法 typeof</h2><p><code>typeof</code>  操作符，是判断 javascript 类型的基本方法，返回的结果是字符串:<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typeof</span> operand</span><br></pre></td></tr></table></figure></p>
+<p>typeof 能得到的结果如下：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Undefined</td>
+<td>“undefined”</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>“object”</td>
+</tr>
+<tr>
+<td>Boolean</td>
+<td>“boolean”</td>
+</tr>
+<tr>
+<td>Number</td>
+<td>“number”</td>
+</tr>
+<tr>
+<td>String</td>
+<td>“string”</td>
+</tr>
+<tr>
+<td>Symbol (new in ECMAScript 2015)</td>
+<td>“symbol”</td>
+</tr>
+<tr>
+<td>Host object (provided by the JS environment)</td>
+<td>Implementation-dependent</td>
+</tr>
+<tr>
+<td>Function object (implements [[Call]] in ECMA-262 terms)</td>
+<td>“function”</td>
+</tr>
+<tr>
+<td>Any other object</td>
+<td>“object”</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>在大部分情况下，类型判断使用 typeof 就可以了，不过 typeof 也有盲点。</p>
+<h4 id="盲点一：typeof-null-‘object’"><a href="#盲点一：typeof-null-‘object’" class="headerlink" title="盲点一：typeof null === ‘object’"></a>盲点一：typeof null === ‘object’</h4><p>所以，null 的判断方法如下：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isNull</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> value === <span class="literal">null</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="盲点二：无法检测对象的类型"><a href="#盲点二：无法检测对象的类型" class="headerlink" title="盲点二：无法检测对象的类型"></a>盲点二：无法检测对象的类型</h4><p>比如 string ，虽然大多数情况下是原始类型的 string ，也有可能是 string 对象</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> strPrm = <span class="string">""</span> <span class="comment">//string primitives</span></span><br><span class="line"><span class="keyword">let</span> strObj = <span class="keyword">new</span> <span class="built_in">String</span>() <span class="comment">//String objects</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typeof</span> strPrm</span><br><span class="line"><span class="comment">// =&gt; 'string'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typeof</span> strObj</span><br><span class="line"><span class="comment">// =&gt; object</span></span><br></pre></td></tr></table></figure>
+<p>至于 String primitives 和 String object 的不同，可以看文末的延伸阅读。</p>
+<h3 id="二、第二种方法-Object-prototype-toString"><a href="#二、第二种方法-Object-prototype-toString" class="headerlink" title="二、第二种方法 Object.prototype.toString()"></a>二、第二种方法 Object.prototype.toString()</h3><p>对于“盲点二”情况，可以调用 <code>Object.prototype.toString()</code> 来检测对象的类（class），有的地方也称作 tag。调用时必须使用 <code>Function.prototype.call()</code> 或者 <code>Function.prototype.apply()</code> 方法（<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString" target="_blank" rel="noopener">文档</a>）</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> toString = <span class="built_in">Object</span>.prototype.toString;</span><br><span class="line"></span><br><span class="line">toString.call(<span class="keyword">new</span> <span class="built_in">Date</span>);    <span class="comment">// [object Date]</span></span><br><span class="line">toString.call(<span class="keyword">new</span> <span class="built_in">String</span>);  <span class="comment">// [object String]</span></span><br><span class="line">toString.call(<span class="built_in">Math</span>);        <span class="comment">// [object Math]</span></span><br><span class="line"><span class="comment">// Since JavaScript 1.8.5</span></span><br><span class="line">toString.call(<span class="literal">undefined</span>);   <span class="comment">// [object Undefined]</span></span><br><span class="line">toString.call(<span class="literal">null</span>);        <span class="comment">// [object Null]</span></span><br></pre></td></tr></table></figure>
+<h2 id="三、对-lodash-baseGetTag-js-源码的疑惑"><a href="#三、对-lodash-baseGetTag-js-源码的疑惑" class="headerlink" title="三、对 lodash  baseGetTag.js 源码的疑惑"></a>三、对 lodash  <code>baseGetTag.js</code> 源码的疑惑</h2><p><a href="https://github.com/lodash/lodash/" target="_blank" rel="noopener">lodash</a> 获取对象类型用到的方法 <a href="https://github.com/lodash/lodash/blob/master/.internal/baseGetTag.js" target="_blank" rel="noopener"><code>baseGetTag.js</code></a> ，就是对 <code>Object.prototype.toString()</code> 的实现。</p>
+<p> <code>baseGetTag.js</code> 首先判断运行环境是否支持 Symbol 类型<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> objectProto = <span class="built_in">Object</span>.prototype</span><br><span class="line"><span class="keyword">const</span> hasOwnProperty = objectProto.hasOwnProperty</span><br><span class="line"><span class="keyword">const</span> toString = objectProto.toString</span><br><span class="line"><span class="comment">// 判断是否支持 Symbol 类型（ES6）</span></span><br><span class="line"><span class="keyword">const</span> symToStringTag = <span class="keyword">typeof</span> <span class="built_in">Symbol</span> != <span class="string">'undefined'</span> ? <span class="built_in">Symbol</span>.toStringTag : <span class="literal">undefined</span></span><br></pre></td></tr></table></figure></p>
+<p>对于属性值没有 Symbol 类型的对象，直接调用 <code>Object.prototype.toString.call()</code> 方法：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// baseGetTag() Part_one</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">baseGetTag</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (value == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> value === <span class="literal">undefined</span> ? <span class="string">'[object Undefined]'</span> : <span class="string">'[object Null]'</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 不是 symbol 的情况，调用 toString()</span></span><br><span class="line">  <span class="keyword">if</span> (!(symToStringTag &amp;&amp; symToStringTag <span class="keyword">in</span> <span class="built_in">Object</span>(value))) &#123;</span><br><span class="line">    <span class="keyword">return</span> toString.call(value)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 下文省略。。。</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>而对于带有 Symbol 类型属性的对象（？），则按以下方法处理：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// baseGetTag() Part_two</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">baseGetTag</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 上文省略。。。</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> isOwn = hasOwnProperty.call(value, symToStringTag)</span><br><span class="line">  <span class="keyword">const</span> tag = value[symToStringTag]</span><br><span class="line">  <span class="keyword">let</span> unmasked = <span class="literal">false</span></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    value[symToStringTag] = <span class="literal">undefined</span></span><br><span class="line">    unmasked = <span class="literal">true</span></span><br><span class="line">  &#125; <span class="keyword">catch</span> (e) &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> result = toString.call(value)</span><br><span class="line">  <span class="keyword">if</span> (unmasked) &#123;</span><br><span class="line">    <span class="keyword">if</span> (isOwn) &#123;</span><br><span class="line">      value[symToStringTag] = tag</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">delete</span> value[symToStringTag]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>不过，对于上面的代码，我研究了半天也没理解到底有什么作用了！！向 <code>baseGetTag() Part_one</code> 和 <code>baseGetTag() Part_two</code> 传入同样的参数，返回结果并没有什么差别啊！！？</strong></p>
+<p>例如，我声明一个变量 <code>foo</code> :<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MockStrClass</span> </span>&#123;</span><br><span class="line">  <span class="keyword">get</span> [Symbol.toStringTag]() &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"String"</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> foo = <span class="keyword">new</span> MockStrClass();</span><br></pre></td></tr></table></figure></p>
+<p>无论对这个 <code>foo</code> 调用 <code>Object.prototype.toString.call()</code> 还是 <code>baseGetTag()</code>，结果都是一样的：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Object</span>.prototype.toString.call(foo) <span class="comment">// [object String]</span></span><br><span class="line">baseGetTag(foo) <span class="comment">// [object String]</span></span><br><span class="line"></span><br><span class="line">lodash.isString(foo) <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+<h2 id="四、-和-的区别"><a href="#四、-和-的区别" class="headerlink" title="四、== 和 === 的区别"></a>四、<code>==</code> 和 <code>===</code> 的区别</h2><p>判断数据类型时，经常要用到比较运算符（Comparison operators）<code>==</code> 和 <code>===</code>，其中<code>==</code> 属于抽象比较（abstract comparison），<code>===</code> 属于严格比较（strict comparison），两者的区别如下：</p>
+<ul>
+<li><code>==</code>（Equality）符号两侧的操作数如果不是同一个类型，<strong>它会先把两侧的操作数转换成同一种类型</strong>，然后再进行严格比较（<code>===</code>）。</li>
+<li>如果<code>==</code><strong>两侧的操作数是对象</strong>，则比较内部引用（internal references），如果他们都指向内存的同一个地方，则返回 true。</li>
+<li><code>===</code> 在运算时不会进行类型转换。</li>
+<li><code>!=</code> 和 <code>!==</code> 的区别遵循上述原则</li>
+</ul>
+<p>所以，当你要求两侧的操作数必须是同一种数据类型时，就应该使用 <code>===</code>，否则可以用 <code>==</code>。</p>
+<p>一些示例<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="literal">NaN</span>  == <span class="literal">NaN</span>        <span class="comment">//false，NaN 和任何东西动不相等，包括 NaN 自身</span></span><br><span class="line"><span class="literal">true</span> === <span class="literal">true</span>      <span class="comment">// true</span></span><br><span class="line"><span class="number">0</span>    == <span class="literal">false</span>      <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="number">0</span>    == <span class="literal">null</span>       <span class="comment">// false</span></span><br><span class="line"><span class="number">0</span>    == <span class="literal">undefined</span>  <span class="comment">// false</span></span><br><span class="line"></span><br><span class="line"><span class="literal">null</span> == <span class="literal">undefined</span>  <span class="comment">// true</span></span><br><span class="line"><span class="literal">null</span> === <span class="literal">undefined</span> <span class="comment">// fales</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> object1 = &#123;<span class="string">'value'</span>: <span class="string">'key'</span>&#125;, object2 = &#123;<span class="string">'value'</span>: <span class="string">'key'</span>&#125;;</span><br><span class="line"><span class="keyword">var</span> object3 = object1;</span><br><span class="line">object1 == object2 <span class="comment">//false</span></span><br><span class="line">object1 == object3 <span class="comment">//true</span></span><br><span class="line">object1 === object3 <span class="comment">//ture</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="进行数据转换时的规范"><a href="#进行数据转换时的规范" class="headerlink" title="进行数据转换时的规范"></a>进行数据转换时的规范</h4><p><code>==</code> 比较时，javascript 对字符串、数字、布尔值、对象的数据转换，遵循以下规范：</p>
+<ul>
+<li>比较数字和字符串，把字符串转成数字</li>
+<li>如果其中一个操作数时布尔值，布尔值 true 转成 1， false 转成 +0，</li>
+<li>对象和字符串或数字比较，javascript 会尝试用 <code>valueOf</code> 和 <code>toString</code> 把对象转成原始类型 字符串 或 数字，如果转换失败则报错</li>
+<li>只有当对象和原始类型的数据比较是，javascript 才尝试会把对象转成原始类型，如果是对象和对象之间的比较，则是判断它们是否指向同一个对象。</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="literal">true</span> == <span class="string">'1'</span>  <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> object2 = &#123;</span><br><span class="line">  toString()&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">'2'</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">object2 == <span class="string">'2'</span> <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures" target="_blank" rel="noopener">JavaScript data types and data structures
+</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof" target="_blank" rel="noopener">typeof</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag" target="_blank" rel="noopener">Symbol.toStringTag</a></li>
+<li><a href="http://es6.ruanyifeng.com/#docs/symbol" target="_blank" rel="noopener">Symbol</a></li>
+<li><a href="https://blog.m31271n.com/2016/10/02/ES-%E5%9F%BA%E7%A1%80-%E2%80%94%E2%80%94-%E7%B1%BB%E5%9E%8B%E6%A3%80%E6%B5%8B/#Lodash-类型检测方法分析" target="_blank" rel="noopener">ES 基础 —— 类型检测</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Comparison_Operators" target="_blank" rel="noopener">Comparison operators</a></li>
+</ul>
+<h2 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h2><ul>
+<li>Host object<ul>
+<li><a href="https://stackoverflow.com/questions/7614317/what-is-the-difference-between-native-objects-and-host-objects" target="_blank" rel="noopener">native objects vs host objects</a></li>
+<li><a href="https://www.quora.com/In-JavaScript-does-typeof(SOMETHING)-always-return-a-lowercase-string-or-does-it-differ-between-browsers" target="_blank" rel="noopener">https://www.quora.com/In-JavaScript-does-typeof(SOMETHING)-always-return-a-lowercase-string-or-does-it-differ-between-browsers</a></li>
+</ul>
+</li>
+<li>string primitives 和 String objects 的区别<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" target="_blank" rel="noopener">String </a></li>
+<li><a href="https://stackoverflow.com/questions/5750656/whats-the-point-of-new-stringx-in-javascript" target="_blank" rel="noopener">String</a></li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/07/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/" rel="next" title="翻译：JavaScript Promises 实现原理详解（JavaScript Promises ... In Wicked Detail）">
+                <i class="fa fa-chevron-left"></i> 翻译：JavaScript Promises 实现原理详解（JavaScript Promises ... In Wicked Detail）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/26/2017-10-26-javascript-scoping-and-statements-of-var-let-const/" rel="prev" title="JavaScript 作用域及 var、let、const">
+                JavaScript 作用域及 var、let、const <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ttimehc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/chasecs" title="GitHub &rarr; https://github.com/chasecs" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:ttimehc@gmail.com" title="E-Mail &rarr; mailto:ttimehc@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、第一种方法-typeof"><span class="nav-number">1.</span> <span class="nav-text">一、第一种方法 typeof</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#盲点一：typeof-null-‘object’"><span class="nav-number">1.0.1.</span> <span class="nav-text">盲点一：typeof null === ‘object’</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#盲点二：无法检测对象的类型"><span class="nav-number">1.0.2.</span> <span class="nav-text">盲点二：无法检测对象的类型</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、第二种方法-Object-prototype-toString"><span class="nav-number">1.1.</span> <span class="nav-text">二、第二种方法 Object.prototype.toString()</span></a></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#三、对-lodash-baseGetTag-js-源码的疑惑"><span class="nav-number">2.</span> <span class="nav-text">三、对 lodash  baseGetTag.js 源码的疑惑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、-和-的区别"><span class="nav-number">3.</span> <span class="nav-text">四、== 和 === 的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#进行数据转换时的规范"><span class="nav-number">3.0.1.</span> <span class="nav-text">进行数据转换时的规范</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延伸阅读"><span class="nav-number">5.</span> <span class="nav-text">延伸阅读</span></a></li></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ttimehc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'eb2224abc6c383a0371e',
+    clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+    repo: 'chasecs.github.io',
+    owner: 'chasecs',
+    admin: ['chasecs'],
+    id: md5(location.pathname),
+    
+      language: 'en, zh-CN',
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

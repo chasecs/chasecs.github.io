@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="本文以百度 OCR 的 iOS SDK 和 Android SDK 为例，介绍如何将其打包为一个原生模块库（Native Module library） “react-native-baidu-ocr” ，供 React Navive APP 调用...">
+<meta property="og:type" content="article">
+<meta property="og:title" content="React Native 原生模块库打包指南">
+<meta property="og:url" content="https://chasecs.github.io/2017/08/09/2017-08-09-react_native_packing_native_module_for_android_n_ios/index.html">
+<meta property="og:site_name" content="编程札记">
+<meta property="og:description" content="本文以百度 OCR 的 iOS SDK 和 Android SDK 为例，介绍如何将其打包为一个原生模块库（Native Module library） “react-native-baidu-ocr” ，供 React Navive APP 调用...">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://chasecs.github.io/images/react_native_packing_native_module_for_android_n_ios/p3.png">
+<meta property="og:image" content="https://chasecs.github.io/images/react_native_packing_native_module_for_android_n_ios/p1.png">
+<meta property="og:image" content="https://chasecs.github.io/images/react_native_packing_native_module_for_android_n_ios/p4.png">
+<meta property="og:image" content="https://chasecs.github.io/images/react_native_packing_native_module_for_android_n_ios/p5.png">
+<meta property="og:image" content="https://chasecs.github.io/images/react_native_packing_native_module_for_android_n_ios/p6.png">
+<meta property="og:image" content="https://chasecs.github.io/images/react_native_packing_native_module_for_android_n_ios/p7.png">
+<meta property="og:image" content="https://chasecs.github.io/images/react_native_packing_native_module_for_android_n_ios/p8.png">
+<meta property="og:updated_time" content="2019-08-09T02:57:01.994Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="React Native 原生模块库打包指南">
+<meta name="twitter:description" content="本文以百度 OCR 的 iOS SDK 和 Android SDK 为例，介绍如何将其打包为一个原生模块库（Native Module library） “react-native-baidu-ocr” ，供 React Navive APP 调用...">
+<meta name="twitter:image" content="https://chasecs.github.io/images/react_native_packing_native_module_for_android_n_ios/p3.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://chasecs.github.io/2017/08/09/2017-08-09-react_native_packing_native_module_for_android_n_ios/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>React Native 原生模块库打包指南 | 编程札记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">编程札记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/chasecs" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2017/08/09/2017-08-09-react_native_packing_native_module_for_android_n_ios/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程札记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">React Native 原生模块库打包指南
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2017-08-09 00:00:00" itemprop="dateCreated datePublished" datetime="2017-08-09T00:00:00+08:00">2017-08-09</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-09 10:57:01" itemprop="dateModified" datetime="2019-08-09T10:57:01+08:00">2019-08-09</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/前端/" itemprop="url" rel="index"><span itemprop="name">前端</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+            <div class="post-description">本文以百度 OCR 的 iOS SDK 和 Android SDK 为例，介绍如何将其打包为一个原生模块库（Native Module library） “react-native-baidu-ocr” ，供 React Navive APP 调用...</div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>最终项目的 repository：<a href="https://github.com/chasecs/react-native-baidu-ocr" target="_blank" rel="noopener">react-native-baidu-ocr</a></strong></p>
+<h2 id="原生模块（Native-Module）的使用方式"><a href="#原生模块（Native-Module）的使用方式" class="headerlink" title="原生模块（Native Module）的使用方式"></a>原生模块（Native Module）的使用方式</h2><p>React Native（下称RN）的官方文档介绍了<a href="https://facebook.github.io/react-native/docs/native-modules-ios.html" target="_blank" rel="noopener">Native Modules</a> （下称“原生模块”）的使用方法，用于访问原生平台的 API。但是，文档里的方法并不适合直接在项目使用。</p>
+<p>以 iOS 为例，如果按照 RN 文档的做法，你需要用 Xcode 项目的 <code>.xcodeproj</code> 文件，在里面新建一个 <code>.m</code> Objective-C File 和一个 <code>.h</code> Header File，然后在这两个文件里实现一个“RCTBridgeModule”协议的 Objective-C 类。</p>
+<p>这样做的缺点我想到的有两个，一是，如果要实现的原生模块多了，<code>.m</code> 和 <code>.h</code> 也会递增，目录容易混乱难以管理；二是，这样的原生模块不容易复用，其它项目没法直接使用这个原生模块。</p>
+<p>通行的做法是，将实现后原生模块打包好，然后存放在项目的<code>node_modules</code>的文件内，供 APP 调用。</p>
+<h2 id="打包原生模块的主要工作"><a href="#打包原生模块的主要工作" class="headerlink" title="打包原生模块的主要工作"></a>打包原生模块的主要工作</h2><p>打包一个原生模块，最主要的工作有两部分：</p>
+<ul>
+<li>安装该模块，即 “react-native link” 完成的工作。</li>
+<li>写代码，对于iOS，是写一个实现了“RCTBridgeModule”协议的Objective-C类；对于Android，是写一个继承了 ReactContextBaseJavaModule的Java类。</li>
+</ul>
+<p>所以，要打包 React Native 的原生模块，你最好有以下知识储备：</p>
+<ul>
+<li>有 RN 开发经验。如 RN 文档所说，原生模块是该框架的高级特性，当然是有一定的经验更易理解。</li>
+<li>了解 Java 和 Objective-C， 至少能看懂这两种代码。</li>
+</ul>
+<p>本文将以百度 OCR 的 <a href="http://ai.baidu.com/docs#/OCR-iOS-SDK/top" target="_blank" rel="noopener">iOS SDK</a> &amp; <a href="http://ai.baidu.com/docs#/OCR-Android-SDK/top" target="_blank" rel="noopener">Android SDK</a> 为例，介绍如何将其打包为一个名为 “react-native-baidu-ocr” 的 原生模块库（library），供 RN APP 调用。</p>
+<p>这个例子相比一般的原生模块开发（RN文档示例）会多一项工作，即引入SDK，流程大致如下：</p>
+<ul>
+<li>创建一个 RN 项目 ExampleApp，用于调试。</li>
+<li>初始化 react-native-baidu-ocr 包。</li>
+<li>分别针对 Android 和 iOS 平台配置、引入 SDK、写代码。</li>
+</ul>
+<h2 id="初始化原生模块库"><a href="#初始化原生模块库" class="headerlink" title="初始化原生模块库"></a>初始化原生模块库</h2><p>先创建一个 RN 项目 ExampleApp。</p>
+<p>创建RN库有多种方法。</p>
+<p>如果只需要支持 iOS 平台，可以直接使用<code>react-native-cli</code>命令:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">react-native new-library --name &lt;yourLibraryName&gt;</span><br></pre></td></tr></table></figure></p>
+<p>命令执行后，可以在项目的 ./Libraries 或是 ./node_modules/react-native/Libraries 目录找到该文件夹。</p>
+<p>而 Android 库，目前只知道可以通过 Android Studio 来创建，操作起来比较麻烦。</p>
+<p>上述这两种方法此处不作赘述。这里使用一个开源的工具 <a href="https://github.com/frostney/react-native-create-library" target="_blank" rel="noopener">react-native-create-library</a>，来帮我们初始化同时支持 Android 和 iOS 的库。</p>
+<p>首先，安装 react-native-create-library<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install -g react-native-create-library</span><br></pre></td></tr></table></figure></p>
+<p>进入你要存放library的目录，创建 BaiduOCR<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">react-native-create-library BaiduOCR</span><br></pre></td></tr></table></figure></p>
+<p>新建的 BaiduOCR 里，包含 Android 和 iOS 项目，还有不需要的 windows，直接删掉<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf windows/</span><br></pre></td></tr></table></figure></p>
+<p><em>和 react-native-create-library 类似的工具还有 <a href="https://github.com/peggyrayzis/react-native-create-bridge" target="_blank" rel="noopener">react-native-create-bridge</a>，不过没用过</em></p>
+<p>目录下创建 react-native-baidu-ocr, 把BaiduOCR目录下的文件都转移过去，初始化就算完成了。</p>
+<h2 id="打包-iOS-部分"><a href="#打包-iOS-部分" class="headerlink" title="打包 iOS 部分"></a>打包 iOS 部分</h2><p>先下载 <a href="http://ai.baidu.com/docs#/OCR-iOS-SDK/top" target="_blank" rel="noopener">百度 OCR iOS SDK</a>。下载下来的文件里没有现成的 AipOcrSdk.framework，需要自己生成并导入，过程有点复杂，以后另文专述。</p>
+<p>把 AipOcrSdk.framework 和 AipBase.framework 复制粘粘到 ios 目录</p>
+<p> <img alt="复制粘粘到 ios 目录" src="/images/react_native_packing_native_module_for_android_n_ios/p3.png" style="border: 1px solid black"></p>
+<p>进入ios目录，用 Xcode 打开 RNBaiduOcr.xcodeproj。</p>
+<p>点击左侧栏蓝色项目logo，中间栏 TARGETS，Build Phases，选择 Link Binary With Libraries，点击‘+’，选 Add Another，把刚刚复制到 ios 目录的 AipOcrSdk.framework 和 AipBase.framework 加入</p>
+<p><img alt="Link Binary With Libraries" src="/images/react_native_packing_native_module_for_android_n_ios/p1.png" style="border: 1px solid black"></p>
+<p>参照 baidu 官方文档，在 <code>RNBaiduOcr.m</code> 实现“RCTBridgeModule”协议。代码实现部分可以直接看<a href="https://github.com/chasecs/react-native-baidu-ocr/blob/master/ios/RNBaiduOcr.m" target="_blank" rel="noopener">源码</a>，这里就不细说。</p>
+<p>代码实现后，需要将 RNBaiduOcr 项目 build 一下。如果 “’React/RCTDefines.h’ file not found”，改为”RCTDefines.h”</p>
+<p>用 Xcode 打开 ExampleApp 项目，Libraires 右键 Add Files to “ExampleApp” ,选择 node_module/react-native-baidu-ocr/ios/RNBaiduOcr.xcodeproj</p>
+<p>选择 ExampleApp — TARGETS — build phases — Link Binary With Libraries</p>
+<p><img alt="p4" src="/images/react_native_packing_native_module_for_android_n_ios/p4.png" style="border: 1px solid black"></p>
+<p>点击“+”，Add “libRNBaiduOcr.a”</p>
+<p><img alt="Add “libRNBaiduOcr.a”" src="/images/react_native_packing_native_module_for_android_n_ios/p5.png" style="border: 1px solid black"></p>
+<p>打开 ExampleApp 项目 Libiraies 里面的 RNBaiduOcr.xcodeproj,将 AipOcrSdk.framework 和 AipBase.framework 复制到 ExampleApp 文件夹（注意此时应该关掉 Xcode 之前打开的 RNBaiduOcr 项目）</p>
+<p><img alt="复制到 ExampleApp" src="/images/react_native_packing_native_module_for_android_n_ios/p6.png" style="border: 1px solid black"></p>
+<p>选择 ExampleApp — TARGETS -&gt; General -&gt; Embedded Binaries, 加入<br>AipOcrSdk.framework 和 AipBase.framework</p>
+<p><img alt="加入AipOcrSdk.framework 和 AipBase.framework" src="/images/react_native_packing_native_module_for_android_n_ios/p7.png" style="border: 1px solid black"></p>
+<p>上述工作完成后，iOS部分就能使用了。</p>
+<h2 id="打包-Android-部分"><a href="#打包-Android-部分" class="headerlink" title="打包 Android 部分"></a>打包 Android 部分</h2><p>参照<a href="http://ai.baidu.com/docs#/OCR-Android-SDK/top" target="_blank" rel="noopener">百度 OCR Android SDK 开发者文档</a>，将下载包libs目录中的 ocr-sdk.jar 文件，拷贝到工程 node_module/react-native-baidu-ocr/android/libs 目录中。</p>
+<p>将 ocr-sdk.jar 加入工程依赖，即修改 ./react-native-baidu-ocr/android/build.gradle</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">dependencies &#123;</span><br><span class="line">    compile &apos;com.facebook.react:react-native:+&apos;</span><br><span class="line">    compile files(&apos;libs/ocr-sdk.jar&apos;)       //加入这行</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>将下载包libs目录下armeabi，arm64-v8a，armeabi-v7a，x86文件夹按需添加到 android studio工程src/main/jniLibs目录中<br>link 部分</p>
+<p>加入以下代码到 ./ExampleApp/android/settings.gradle<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">include &apos;:react-native-baidu-ocr&apos;</span><br><span class="line">project(&apos;:react-native-baidu-ocr&apos;).projectDir = new File(rootProject.projectDir, &apos;../node_modules/react-native-baidu-ocr/android&apos;)</span><br></pre></td></tr></table></figure></p>
+<p>加入以下代码到 ./ExampleApp/android/app/build.gradle<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">   ...</span><br><span class="line">    compile project(&apos;:react-native-baidu-ocr&apos;&apos;) // 加入</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>打开 ./ExampleApp/android/app/src/main/java/[…]/MainActivity.java</p>
+<ul>
+<li>在文件开头加入 <code>import com.reactlibrary.RNBaiduOcrPackage;</code></li>
+<li>在 <code>getPackages()</code> 方法里加入 <code>new RNBaiduOcrPackage()</code></li>
+</ul>
+<p>参照 baidu ocr android 官方文档，实现继承了 ReactContextBaseJavaModule 的 Java 类 <a href="https://github.com/chasecs/react-native-baidu-ocr/blob/master/android/src/main/java/com/reactlibrary/RNBaiduOcrModule.java" target="_blank" rel="noopener">RNBaiduOcrModule.java</a>。</p>
+<h2 id="Android-代码指南"><a href="#Android-代码指南" class="headerlink" title="Android 代码指南"></a>Android 代码指南</h2><p>由于 baidu ocr 的 ios 和 android 返回数据的格式不一致，为例 RN APP 调用方便，这里只好将 Android 部分的返回数据格式，改成和ios一样。</p>
+<p>百度的文档里没有提供 ocr-sdk.jar 里诸如 IDCardResult 等 Class 的文档，无法直接获知各个类可调用的方法。不过，通过 Android Studio 打开从百度官方下载的 OCRDemo 项目，可以看到 jar 包的代码，由此知道有哪些可调用的方法。</p>
+<p><img alt="ocr-sdk.jar的代码" src="/images/react_native_packing_native_module_for_android_n_ios/p8.png" style="border: 1px solid black"></p>
+<p>Android 部分的代码实现，主要就是将原生SDK返回的数据，通过 <code>com.facebook.react.bridge.WritableMap</code> 等类的方法，映射到它们对应的JavaScript类型，例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">*convert GeneralResult into WritableMap</span></span><br><span class="line"><span class="comment">*@param GeneralResult result</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> WritableMap <span class="title">resultToWritableMap</span><span class="params">(GeneralResult result)</span></span>&#123;</span><br><span class="line">  WritableMap response = Arguments.createMap();</span><br><span class="line">  WritableArray wordList = Arguments.createArray();;</span><br><span class="line">  <span class="keyword">for</span> (WordSimple wordSimple : result.getWordList()) &#123;</span><br><span class="line">      WordSimple word = wordSimple;</span><br><span class="line">      WritableMap wordItem = Arguments.createMap();</span><br><span class="line">      wordItem.putString(<span class="string">"words"</span>, word.getWords());</span><br><span class="line">      wordList.pushMap(wordItem);</span><br><span class="line">  &#125;</span><br><span class="line">  response.putArray(<span class="string">"words_result"</span>, wordList);</span><br><span class="line">  response.putInt(<span class="string">"words_result_num"</span>, result.getWordsResultNumber());</span><br><span class="line">  response.putInt(<span class="string">"direction"</span>, result.getDirection());</span><br><span class="line">  <span class="keyword">return</span> response;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>GeneralResult</code> 是百度SDK提供的类，最后的 <code>response</code> 是可以在 RN APP 中被 JavaScript 理解的 Object。</p>
+<p>Android 代码实现后，这个原生模块库的打包即告完成，可以在当前的RN项目里使用。</p>
+<h2 id="分享到-NPM"><a href="#分享到-NPM" class="headerlink" title="分享到 NPM"></a>分享到 NPM</h2><p>不过，要想让这个原生模块可以给你的其它项目或者他人使用，还有一些额外的工作，最简单的就是，写好使用文档，发布到 npm。</p>
+<p>上传到 npm 之前，把 node_modules/ 里的 react-native-baidu-ocr 复制粘贴到 ExampleApp 项目以外的地方。最好 <code>git init</code>, 然后再上传，具体操作参考 <a href="https://gist.github.com/coolaj86/1318304" target="_blank" rel="noopener">Getting Started with NPM</a></p>
+<p>上传成功后，其它项目就可以通过 npm install 来使用这个库。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>打包相关  <ul>
+<li><a href="https://shift.infinite.red/native-modules-for-react-native-android-ac05dbda800d" target="_blank" rel="noopener">Native Modules for React Native Android</a>  </li>
+<li><a href="http://www.codepool.biz/react-native-bridging-modules-android.html" target="_blank" rel="noopener">React Native Bridging Modules for Android from Scratch on Windows</a>  </li>
+<li><a href="https://stackoverflow.com/questions/41663002/react-rctbridgemodule-h-file-not-found/43340802" target="_blank" rel="noopener"><code>React/RCTBridgeModule.h</code> file not found</a>  </li>
+<li><a href="https://github.com/itinance/react-native-fs/pull/238" target="_blank" rel="noopener">‘RCTBridgeModule.h’ file not found error</a>  </li>
+<li><a href="https://medium.com/gbox-crew-blog/making-libraries-for-react-native-14a8f5006697#.mb7gojizs" target="_blank" rel="noopener">Making libraries for React Native</a>  </li>
+<li><a href="http://www.jianshu.com/p/73ef53244a7b" target="_blank" rel="noopener">如何在 React Native 中写一个自定义模块</a>  </li>
+<li><a href="https://blog.callstack.io/react-native-and-native-modules-the-android-syncadapter-517ddf851bf4" target="_blank" rel="noopener">React Native and Native Modules: The Android SyncAdapter</a>  </li>
+<li><a href="http://cmichel.io/how-to-create-react-native-android-library/" target="_blank" rel="noopener">How to create a React Native Android Library</a>  </li>
+<li><a href="https://eastcodes.com/packaging-and-sharing-react-native-modules" target="_blank" rel="noopener">React Native: Packaging and Sharing Native Modules</a>  </li>
+</ul>
+</li>
+<li>iOS framework 相关  <ul>
+<li><a href="https://www.zybuluo.com/qidiandasheng/note/603907" target="_blank" rel="noopener">iOS里的动态库和静态库</a>  </li>
+<li><a href="http://blog.csdn.net/xy_26207005/article/details/71108558" target="_blank" rel="noopener">iOS 动态库(Dynamic框架)的创建以及引用添加(Embed Binary方式嵌入)</a>  </li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/09/02/2017-09-02-react-redux-shopping-cart-demo/" rel="prev" title="React + Redux 应用的开发流程，以购物车为例">
+                React + Redux 应用的开发流程，以购物车为例 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ttimehc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/chasecs" title="GitHub &rarr; https://github.com/chasecs" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:ttimehc@gmail.com" title="E-Mail &rarr; mailto:ttimehc@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#原生模块（Native-Module）的使用方式"><span class="nav-number">1.</span> <span class="nav-text">原生模块（Native Module）的使用方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#打包原生模块的主要工作"><span class="nav-number">2.</span> <span class="nav-text">打包原生模块的主要工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化原生模块库"><span class="nav-number">3.</span> <span class="nav-text">初始化原生模块库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#打包-iOS-部分"><span class="nav-number">4.</span> <span class="nav-text">打包 iOS 部分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#打包-Android-部分"><span class="nav-number">5.</span> <span class="nav-text">打包 Android 部分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android-代码指南"><span class="nav-number">6.</span> <span class="nav-text">Android 代码指南</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分享到-NPM"><span class="nav-number">7.</span> <span class="nav-text">分享到 NPM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">8.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ttimehc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'eb2224abc6c383a0371e',
+    clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+    repo: 'chasecs.github.io',
+    owner: 'chasecs',
+    admin: ['chasecs'],
+    id: md5(location.pathname),
+    
+      language: 'en, zh-CN',
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="利用 swagger 管理 API 开发">
+<meta property="og:url" content="https://chasecs.github.io/2019/11/20/introduction-to-swagger-a-tool-simplify-your-api-development/index.html">
+<meta property="og:site_name" content="编程札记">
+<meta property="og:description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://chasecs.github.io/images/swagger-editor.png">
+<meta property="og:updated_time" content="2019-11-21T05:16:04.577Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="利用 swagger 管理 API 开发">
+<meta name="twitter:description" content="swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。">
+<meta name="twitter:image" content="https://chasecs.github.io/images/swagger-editor.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://chasecs.github.io/2019/11/20/introduction-to-swagger-a-tool-simplify-your-api-development/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>利用 swagger 管理 API 开发 | 编程札记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">编程札记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/chasecs" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2019/11/20/introduction-to-swagger-a-tool-simplify-your-api-development/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程札记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">利用 swagger 管理 API 开发
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-20 21:48:25" itemprop="dateCreated datePublished" datetime="2019-11-20T21:48:25+08:00">2019-11-20</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-11-21 13:16:04" itemprop="dateModified" datetime="2019-11-21T13:16:04+08:00">2019-11-21</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+            <div class="post-description">swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。</div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>第一次知道 swagger 这个工具， 是在 docker 的源码里，docker 客户端和服务端的 API 就是使用 swagger 来管理。最近在一次技术交流会上，听人提到用 swagger 来自动生成 api 文档，省下了许多前后端沟通的工夫，便留心记了下来。</p>
+<p>前几天抽空研究了一下，发现使用 swagger 进行 api 开发，确实可以减少了许多繁琐的工作，大大提高开发和前后端沟通的效率。使用 swagger ，只要在项目里写好 <code>swagger.yaml</code>文件，其他开发人员需要了解 api 的信息时，把它放到线上或下载下来的 swagger editor，就能自动生成 api 文档，调试接口，还可以生成多种语言的客户端代码、服务端代码。</p>
+<p>swagger 最主要的优点，总结有以下几点：</p>
+<ul>
+<li>记录 api 信息只要一个 yaml 文件，用的时候放到 editor 就能直接生成文档。yaml 容易编辑维护</li>
+<li>可以生成多种客户端代码，客户端调接口只要传参数，简化使用方法</li>
+<li>可以在 editor 请求调试接口</li>
+</ul>
+<h2 id="Swagger-yaml文件示例"><a href="#Swagger-yaml文件示例" class="headerlink" title="Swagger yaml文件示例"></a>Swagger <code>yaml</code>文件示例</h2><p>Swagger 定义 api 的标准文件可以是 json 格式也可以是 yaml 格式，但是使用 yaml 可读性更高和更容易编写。</p>
+<p>Swagger 目前最新版本是 OpenAPI 3.0 （ Swagger Specification 已经被捐献给 linux 基金会，更名为 <a href="https://www.openapis.org/" target="_blank" rel="noopener">OpenAPI Specification</a> (OAS) ，因此 Swagger 和 OpenAPI 基本可以理解为一个东西），虽然 3.0 版本也可以生成的客户端代码，但支持语言没有 2.0 的多。本文还是使用一个 2.0 的 yaml 文件作为示例，介绍 swagger 的基本语法。不过，2.0 的 yaml 可以在 swagger editor 里自动转成 3.0。</p>
+<h3 id="api-文档的基本信息"><a href="#api-文档的基本信息" class="headerlink" title="api 文档的基本信息"></a>api 文档的基本信息</h3><p>Yaml 文件开头需要声明版本：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">swagger:</span> <span class="string">"2.0"</span></span><br></pre></td></tr></table></figure>
+<p>紧跟着是项目信息</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">info:</span></span><br><span class="line">  <span class="attr">version:</span> <span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">  <span class="attr">title:</span> <span class="string">Swagger</span> <span class="string">Petstore</span></span><br><span class="line">  <span class="attr">license:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">MIT</span></span><br></pre></td></tr></table></figure>
+<p>然后是请求地址、格式等内容：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">host:</span> <span class="string">petstore.swagger.io</span></span><br><span class="line"><span class="attr">basePath:</span> <span class="string">/v1</span></span><br><span class="line"><span class="attr">schemes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">http</span></span><br><span class="line"><span class="attr">consumes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">application/json</span></span><br><span class="line"><span class="attr">produces:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">application/json</span></span><br></pre></td></tr></table></figure>
+<p>consumes 和 produces 分别表示请求和返回的 <code>Content-Type</code> （本例是: <code>Content-Type: application/json</code>），接下的接口如果没有另外声明这两个字段，则都是这个格式。</p>
+<h3 id="在-yaml定义一个-GET请求接口"><a href="#在-yaml定义一个-GET请求接口" class="headerlink" title="在 yaml定义一个 GET请求接口"></a>在 <code>yaml</code>定义一个 <code>GET</code>请求接口</h3><p> <code>paths</code> 字段可以定义具体接口请求方式、参数等，例如定义一个<code>GET  /pets</code> 接口：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">paths:</span></span><br><span class="line">  <span class="string">/pets:</span></span><br><span class="line">    <span class="attr">get:</span></span><br><span class="line">      <span class="attr">summary:</span> <span class="string">List</span> <span class="string">all</span> <span class="string">pets</span></span><br><span class="line">      <span class="attr">operationId:</span> <span class="string">listPets</span></span><br><span class="line">      <span class="attr">tags:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">pets</span></span><br><span class="line">      <span class="attr">parameters:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">limit</span></span><br><span class="line">          <span class="attr">in:</span> <span class="string">query</span></span><br><span class="line">          <span class="attr">description:</span> <span class="string">How</span> <span class="string">many</span> <span class="string">items</span> <span class="string">to</span> <span class="string">return</span> <span class="string">at</span> <span class="string">one</span> <span class="string">time</span> <span class="string">(max</span> <span class="number">100</span><span class="string">)</span></span><br><span class="line">          <span class="attr">required:</span> <span class="literal">false</span></span><br><span class="line">          <span class="attr">type:</span> <span class="string">integer</span></span><br><span class="line">          <span class="attr">format:</span> <span class="string">int32</span></span><br><span class="line">      <span class="attr">responses:</span></span><br><span class="line">      	<span class="string">.....</span></span><br></pre></td></tr></table></figure>
+<p>在上面 yaml 片段中：</p>
+<ul>
+<li>Summary 是接口介绍</li>
+<li>operationId 作为该接口的唯一标识</li>
+<li>tags 是给接口的归类</li>
+<li>parameters 即请求参数，此处只有一个 limit 的接口，以 query 方式传递</li>
+</ul>
+<p>接上一个 yaml 片段，返回格式是：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">responses:</span></span><br><span class="line">     <span class="attr">"200":</span></span><br><span class="line">       <span class="attr">description:</span> <span class="string">A</span> <span class="string">paged</span> <span class="string">array</span> <span class="string">of</span> <span class="string">pets</span></span><br><span class="line">       <span class="attr">headers:</span></span><br><span class="line">         <span class="attr">x-next:</span></span><br><span class="line">           <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">           <span class="attr">description:</span> <span class="string">A</span> <span class="string">link</span> <span class="string">to</span> <span class="string">the</span> <span class="string">next</span> <span class="string">page</span> <span class="string">of</span> <span class="string">responses</span></span><br><span class="line">       <span class="attr">schema:</span></span><br><span class="line">       	<span class="attr">type:</span> <span class="string">array</span></span><br><span class="line">       	<span class="attr">items:</span></span><br><span class="line">       		<span class="attr">type:</span> <span class="string">"object"</span></span><br><span class="line">           <span class="attr">required:</span></span><br><span class="line">             <span class="bullet">-</span> <span class="string">id</span></span><br><span class="line">             <span class="bullet">-</span> <span class="string">name</span></span><br><span class="line">           <span class="attr">properties:</span></span><br><span class="line">             <span class="attr">id:</span></span><br><span class="line">               <span class="attr">type:</span> <span class="string">integer</span></span><br><span class="line">               <span class="attr">format:</span> <span class="string">int64</span></span><br><span class="line">             <span class="attr">name:</span></span><br><span class="line">               <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">             <span class="attr">tag:</span></span><br><span class="line">               <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">     <span class="attr">default:</span></span><br><span class="line">       <span class="attr">description:</span> <span class="string">unexpected</span> <span class="string">error</span></span><br><span class="line">       <span class="attr">schema:</span></span><br><span class="line">         <span class="attr">type:</span> <span class="string">"object"</span></span><br><span class="line">         <span class="attr">required:</span></span><br><span class="line">           <span class="bullet">-</span> <span class="string">code</span></span><br><span class="line">           <span class="bullet">-</span> <span class="string">message</span></span><br><span class="line">         <span class="attr">properties:</span></span><br><span class="line">           <span class="attr">code:</span></span><br><span class="line">             <span class="attr">type:</span> <span class="string">integer</span></span><br><span class="line">             <span class="attr">format:</span> <span class="string">int32</span></span><br><span class="line">           <span class="attr">message:</span></span><br><span class="line">             <span class="attr">type:</span> <span class="string">string</span></span><br></pre></td></tr></table></figure>
+<p>在这个 <code>yaml</code> 片段里，分别定义<strong>Status Code</strong> 为 200 和其它的返回值。</p>
+<p>schema 就是返回数据的格式，对应 200 的返回格式即是：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"id"</span>: <span class="number">0</span>,</span><br><span class="line">    <span class="attr">"name"</span>: <span class="string">"string"</span>,</span><br><span class="line">    <span class="attr">"tag"</span>: <span class="string">"string"</span></span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<h3 id="POST-请求接口示例"><a href="#POST-请求接口示例" class="headerlink" title="POST 请求接口示例"></a><code>POST</code> 请求接口示例</h3><p>因为请求路径相同， <code>POST /pets</code> 可以跟在 <code>GET /pets</code> 下方：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">paths:</span></span><br><span class="line">  <span class="string">/pets:</span></span><br><span class="line">    <span class="attr">get:</span></span><br><span class="line">      <span class="string">...</span></span><br><span class="line">      <span class="string">...</span></span><br><span class="line">		<span class="attr">post:</span></span><br><span class="line">      <span class="attr">summary:</span> <span class="string">Create</span> <span class="string">a</span> <span class="string">pet</span></span><br><span class="line">      <span class="attr">operationId:</span> <span class="string">createPets</span></span><br><span class="line">      <span class="attr">tags:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">pets</span></span><br><span class="line">      <span class="attr">parameters:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">"pet"</span></span><br><span class="line">          <span class="attr">in:</span> <span class="string">body</span></span><br><span class="line">          <span class="attr">description:</span> <span class="string">creat</span> <span class="string">a</span> <span class="string">pet</span></span><br><span class="line">          <span class="attr">schema:</span></span><br><span class="line">            <span class="attr">type:</span> <span class="string">"object"</span></span><br><span class="line">            <span class="attr">required:</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">id</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">name</span></span><br><span class="line">            <span class="attr">properties:</span></span><br><span class="line">              <span class="attr">id:</span></span><br><span class="line">                <span class="attr">type:</span> <span class="string">integer</span></span><br><span class="line">                <span class="attr">format:</span> <span class="string">int64</span></span><br><span class="line">              <span class="attr">name:</span></span><br><span class="line">                <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">              <span class="attr">tag:</span></span><br><span class="line">                <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">      <span class="attr">responses:</span></span><br><span class="line">        <span class="attr">"201":</span></span><br><span class="line">          <span class="attr">description:</span> <span class="literal">Null</span> <span class="string">response</span></span><br><span class="line">        <span class="attr">default:</span></span><br><span class="line">         <span class="string">……</span></span><br></pre></td></tr></table></figure>
+<p>POST 请求的参数通过 body 传递，因此 <code>parameters</code> 写明 <code>in: body</code>,  最终生成的请求示例如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"id"</span>: <span class="number">0</span>,</span><br><span class="line">  <span class="attr">"name"</span>: <span class="string">"string"</span>,</span><br><span class="line">  <span class="attr">"tag"</span>: <span class="string">"string"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="使用-ref-复用数据类型"><a href="#使用-ref-复用数据类型" class="headerlink" title="使用 $ref  复用数据类型"></a>使用 <code>$ref</code>  复用数据类型</h3><p>对比 get 和 post 的 yaml 片段，可以发现其中有不少重复的内容，比如 parameters 和 response 的 scheme 多次出现：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">schema:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">"object"</span></span><br><span class="line">        <span class="attr">required:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">id</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">name</span></span><br><span class="line">        <span class="attr">properties:</span></span><br><span class="line">          <span class="attr">id:</span></span><br><span class="line">            <span class="attr">type:</span> <span class="string">integer</span></span><br><span class="line">            <span class="attr">format:</span> <span class="string">int64</span></span><br><span class="line">          <span class="attr">name:</span></span><br><span class="line">            <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">          <span class="attr">tag:</span></span><br><span class="line">            <span class="attr">type:</span> <span class="string">string</span></span><br></pre></td></tr></table></figure>
+<p>这些可以定义一些可复用的数据格式，然后用 <code>$ref</code> 引入：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">definitions:</span></span><br><span class="line">  <span class="attr">Pet:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">"object"</span></span><br><span class="line">    <span class="attr">required:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">id</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">name</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">id:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">integer</span></span><br><span class="line">        <span class="attr">format:</span> <span class="string">int64</span></span><br><span class="line">      <span class="attr">name:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">      <span class="attr">tag:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">  <span class="attr">Pets:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">array</span></span><br><span class="line">    <span class="attr">items:</span></span><br><span class="line">      <span class="string">$ref:</span> <span class="string">'#/definitions/Pet'</span></span><br><span class="line">  <span class="attr">Error:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">"object"</span></span><br><span class="line">    <span class="attr">required:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">code</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">message</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">code:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">integer</span></span><br><span class="line">        <span class="attr">format:</span> <span class="string">int32</span></span><br><span class="line">      <span class="attr">message:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">string</span></span><br></pre></td></tr></table></figure>
+<p>swagger yaml 基本的写法大致就是这样，最终完整的 yaml 文件见：<a href="https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v2.0/yaml/uber.yaml" target="_blank" rel="noopener"><strong>uber.yaml</strong></a></p>
+<h2 id="使用-swagger-editor-生成文档、代码"><a href="#使用-swagger-editor-生成文档、代码" class="headerlink" title="使用 swagger editor 生成文档、代码"></a>使用 swagger editor 生成文档、代码</h2><p>swagger 有一些可以配套使用的工具，editor 就是其中之一。完成的 yaml ，任何时候想查看接口文档，只要把 yaml 文件放到 editor，就能自动生成 api 文档。</p>
+<p>以下截图是放到 <a href="https://editor.swagger.io/" target="_blank" rel="noopener">online editor</a> 的效果:</p>
+<p><img alt="swagger-editor" src="/images/swagger-editor.png" style="border: 1px solid black"></p>
+<p>在 editor 里还可以根据自己需要生成客户端代码，服务端代码。客户端代码可以类似 sdk 那样接入项目，调用时只要传入参数即可。</p>
+<p>服务端代码是一个模版，帮你定义好最终输出数据的格式，而中间的实现逻辑，还需要自己完成。</p>
+<h2 id="swagger-的不足"><a href="#swagger-的不足" class="headerlink" title="swagger 的不足"></a>swagger 的不足</h2><p>swagger 总体上可以大大提高 api 开发的效率，不过试用的过程中，还是发现了美中不足之处。</p>
+<ul>
+<li><p>无法通过 json 数据自动生成 schema。</p>
+<p>写 yaml 文件毕竟还是要花一些时间，尤其是定义返回数据的<code>schema</code>。假如可以导入接口返回的 json 数据，自动生成 schema 的 properties 等信息，又会方便了许多。</p>
+</li>
+</ul>
+<p><strong>参考文章：</strong></p>
+<ul>
+<li><a href="https://spin.atomicobject.com/2018/08/30/swagger-api-intro/" target="_blank" rel="noopener">Intro to Swagger – A Structured Approach to Creating an API</a></li>
+<li><a href="http://apihandyman.io/writing-openapi-swagger-specification-tutorial-part-3-simplifying-specification-file/#writing-openapi-fka-swagger-specification-tutorial" target="_blank" rel="noopener">Writing OpenAPI (fka Swagger) Specification tutorial</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/01/how-to-build-your-Golang-Web-App/" rel="next" title="构建 Golang Web 应用的两种方法">
+                <i class="fa fa-chevron-left"></i> 构建 Golang Web 应用的两种方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/12/24/Union-Find-Algorithm-Application-Estimate-Percolation-Threshold/" rel="prev" title="Union-Find Algorithm Application: Estimate  Percolation Threshold">
+                Union-Find Algorithm Application: Estimate  Percolation Threshold <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ttimehc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/chasecs" title="GitHub &rarr; https://github.com/chasecs" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:ttimehc@gmail.com" title="E-Mail &rarr; mailto:ttimehc@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Swagger-yaml文件示例"><span class="nav-number">1.</span> <span class="nav-text">Swagger yaml文件示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#api-文档的基本信息"><span class="nav-number">1.1.</span> <span class="nav-text">api 文档的基本信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在-yaml定义一个-GET请求接口"><span class="nav-number">1.2.</span> <span class="nav-text">在 yaml定义一个 GET请求接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#POST-请求接口示例"><span class="nav-number">1.3.</span> <span class="nav-text">POST 请求接口示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-ref-复用数据类型"><span class="nav-number">1.4.</span> <span class="nav-text">使用 $ref  复用数据类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-swagger-editor-生成文档、代码"><span class="nav-number">2.</span> <span class="nav-text">使用 swagger editor 生成文档、代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#swagger-的不足"><span class="nav-number">3.</span> <span class="nav-text">swagger 的不足</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ttimehc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'eb2224abc6c383a0371e',
+    clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+    repo: 'chasecs.github.io',
+    owner: 'chasecs',
+    admin: ['chasecs'],
+    id: md5(location.pathname),
+    
+      language: 'en, zh-CN',
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="工作需要搭建一个支持 Repo 管理的私有 Android 源码镜像，因为 Repo 工具是基于 Git 服务器的，所以也实践了一下 Git 服务器的安装。Git 服务器的选择。搭建 Git 服务器有多个选择，除了 Gitolite，还有 Gitosis，Gerrit ...">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在 ubuntu 搭建基于 Gitolite 的 Git 服务器">
+<meta property="og:url" content="https://chasecs.github.io/2017/09/26/2017-09-26-gitolite-installation-and-setup-on-ubuntu-16-04-lts/index.html">
+<meta property="og:site_name" content="编程札记">
+<meta property="og:description" content="工作需要搭建一个支持 Repo 管理的私有 Android 源码镜像，因为 Repo 工具是基于 Git 服务器的，所以也实践了一下 Git 服务器的安装。Git 服务器的选择。搭建 Git 服务器有多个选择，除了 Gitolite，还有 Gitosis，Gerrit ...">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-08-09T02:57:48.560Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在 ubuntu 搭建基于 Gitolite 的 Git 服务器">
+<meta name="twitter:description" content="工作需要搭建一个支持 Repo 管理的私有 Android 源码镜像，因为 Repo 工具是基于 Git 服务器的，所以也实践了一下 Git 服务器的安装。Git 服务器的选择。搭建 Git 服务器有多个选择，除了 Gitolite，还有 Gitosis，Gerrit ...">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://chasecs.github.io/2017/09/26/2017-09-26-gitolite-installation-and-setup-on-ubuntu-16-04-lts/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>在 ubuntu 搭建基于 Gitolite 的 Git 服务器 | 编程札记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">编程札记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/chasecs" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chasecs.github.io/2017/09/26/2017-09-26-gitolite-installation-and-setup-on-ubuntu-16-04-lts/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ttimehc">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="编程札记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">在 ubuntu 搭建基于 Gitolite 的 Git 服务器
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2017-09-26 00:00:00" itemprop="dateCreated datePublished" datetime="2017-09-26T00:00:00+08:00">2017-09-26</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-09 10:57:48" itemprop="dateModified" datetime="2019-08-09T10:57:48+08:00">2019-08-09</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/git/" itemprop="url" rel="index"><span itemprop="name">git</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+            <div class="post-description">工作需要搭建一个支持 Repo 管理的私有 Android 源码镜像，因为 Repo 工具是基于 Git 服务器的，所以也实践了一下 Git 服务器的安装。Git 服务器的选择。搭建 Git 服务器有多个选择，除了 Gitolite，还有 Gitosis，Gerrit ...</div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>工作需要搭建一个支持 Repo 管理的私有 Android 源码镜像，因为 Repo 工具是基于 Git 服务器的，所以也实践了一下 Git 服务器的安装。</p>
+<h2 id="Git-服务器的选择"><a href="#Git-服务器的选择" class="headerlink" title="Git 服务器的选择"></a>Git 服务器的选择</h2><p>搭建 Git 服务器有多个选择，除了 Gitolite，还有 Gitosis，<a href="https://gerrit-review.googlesource.com" target="_blank" rel="noopener">Gerrit</a>，<a href="https://about.gitlab.com/" target="_blank" rel="noopener">Gitlab</a> 等等。</p>
+<p>Gitolite 使用纯文本配置文件（plain text config file），这一点和 Gitosis 一样（如果我没理解错的话），网上也有不少基于文章介绍如何基于 Gitosis 建立 Android 源码镜像。不过，Gitosis 自 2015 年之后已经没再更新了，相当于遗弃了，所以不建议使用 Gitosis。</p>
+<p>Gerrit 和 Gitlab 使用数据库保存数据，Gerrit 支持 Code Review，Google 管理 Android 源码正是使用 Gerrit。Gitlab 还有基于 Web 的 GUI，都很强大，也是不错的选择。</p>
+<p>此外，流行的 Git 服务器还有 <a href="https://github.com/gogits/gogs" target="_blank" rel="noopener">Gogs</a>，同样提供可视化的 web GUI，曾作公司内部的 Git 服务器使用，体验不错。</p>
+<h2 id="搭建-Gitolite-的系统环境"><a href="#搭建-Gitolite-的系统环境" class="headerlink" title="搭建 Gitolite 的系统环境"></a>搭建 Gitolite 的系统环境</h2><p><a href="https://github.com/sitaramc/gitolite" target="_blank" rel="noopener">官方文档</a> 给出非常详细的指引。</p>
+<p>这里准备了一台计算机作为服务器安装 gitolite ，一台计算机作为管理服务器的客户端。  </p>
+<ul>
+<li>服务端 ubuntu 16.04 LTS， IP： 192.168.8.4</li>
+<li>客户端 MacOS Sierra，IP： 192.168.3.35</li>
+</ul>
+<p>先在服务器上安装 <code>git</code>，<code>perl</code>，<code>openssh</code>，可以使用 root 用户进行操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install git perl openssh-server</span><br></pre></td></tr></table></figure>
+<h2 id="创建-git-用户"><a href="#创建-git-用户" class="headerlink" title="创建 git 用户"></a>创建 git 用户</h2><p>安装完成后，创建用户 git，并建立家目录 /home/git ：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">useradd -md /home/git/ git</span><br></pre></td></tr></table></figure></p>
+<p>有关不少文章在创建用户 git 之后，会使用 <code>passwd git</code> 来设置该用户的密码。<br>个人不建议这样做，因为不设置密码的话，只有 root 才可以使用 <code>su - git</code> 登录 git，这样可以避免服务器上的其它用户登录 git 这个账户。</p>
+<h2 id="客户端传送公钥"><a href="#客户端传送公钥" class="headerlink" title="客户端传送公钥"></a>客户端传送公钥</h2><!-- sudo ufw allow 22 -->
+<p>在客户端计算机（192.168.3.35）生成公钥和私钥：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen</span><br></pre></td></tr></table></figure></p>
+<p>各种选择都按回车跳过，最后会在 <code>~/.ssh/</code> 目录生成 <code>id_rsa</code> 和 <code>id_rsa.pub</code></p>
+<p>将 <code>id_rsa.pub</code> 发送到服务端（192.168.8.4）：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp ~/.ssh/id_rsa.pub root@192.168.8.4:~/</span><br></pre></td></tr></table></figure></p>
+<p><code>id_rsa.pub</code> 将在安装 gitolite 时使用，他可以将客户端计算机注册为 gitolite 的管理员。</p>
+<h2 id="服务端安装-gitolite"><a href="#服务端安装-gitolite" class="headerlink" title="服务端安装 gitolite"></a>服务端安装 gitolite</h2><p>在服务端（192.168.8.4），把 <code>id_rsa.pub</code> 转移到 git 的 $HOME 目录<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mv id_rsa.pub /home/git/</span><br></pre></td></tr></table></figure></p>
+<p>使用 <code>su - git</code> 登录 git。确认 <code>~/.ssh/authorized_keys</code> 不存在或者内容是空的，否则把它删除。</p>
+<p>下载 gitolite 到服务端:<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/sitaramc/gitolite</span><br><span class="line">mkdir -p <span class="variable">$HOME</span>/bin</span><br><span class="line">gitolite/install -to <span class="variable">$HOME</span>/bin</span><br></pre></td></tr></table></figure></p>
+<p>安装 gitolite 使用，并将客户端计算机作为 gitolite 的管理员：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gitolite setup -pk YourName.pub</span><br></pre></td></tr></table></figure></p>
+<p>这样就算安装完成了。</p>
+<p>曾经在安装 gitolite 时遇到 <code>FATAL: split conf set, gl-conf not present for....</code> 的错误，反复重试之前的步骤都没能解决。</p>
+<p>后来怀疑应该是之前装了 gitosis，存在冲突。</p>
+<p>最后使用 <code>userdel -r git</code>，删掉 git 账户，重新按上述步骤操作一遍才安装成功。</p>
+<h2 id="gitolite-的管理"><a href="#gitolite-的管理" class="headerlink" title="gitolite 的管理"></a>gitolite 的管理</h2><p>gitolite 添加新的仓库和用户时，不能在服务器上直接操作。</p>
+<p>所有 gitlote 的用户、仓库和访问规则，都由一个特殊的仓库 <code>gitolite-admin</code> 来管理，将这个仓库 clone 到你的客户端计算机（192.168.3.35），即生成 <code>id_rsa.pub</code> 的那部计算机：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git@192.168.8.4:gitolite-admin</span><br></pre></td></tr></table></figure></p>
+<p>上述操作应该是直接将 gitolite-admin 下载到客户端计算机上的，如果出现请求输入密码的情况，那就说明安装过程出错了，需要重新安装。</p>
+<p><code>cd gitolite-admin</code> ，里面有两个子目录  “conf” 和 “keydir”。  </p>
+<h2 id="添加新成员和新仓库"><a href="#添加新成员和新仓库" class="headerlink" title="添加新成员和新仓库"></a>添加新成员和新仓库</h2><p>假设你要往 gitolite 服务器添加新成员 alice，bob， carol，操作流程如下：  </p>
+<p>首先，让三人各自在其计算机上使用<code>ssh-keygen</code>生成 <code>id_rsa</code> 和 <code>id_rsa.pub</code>（注意，一直使用回车就好，不要改名字），把各自的 <code>id_rsa.pub</code> 发送到客户端计算机（192.168.3.35) <code>gitolite-admin/keydir</code> 目录下，并重命名为 alice.pub，bob.pub，carol.pub 。  </p>
+<p>假设要添加新的仓库名为 “foo”，并给予上述三人不同权限，在 <code>gitolite-admin/conf/gitolite.conf</code> 添加下列代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">repo foo</span><br><span class="line">    RW+                     =   alice</span><br><span class="line">    RW                      =   bob</span><br><span class="line">    R                       =   carol</span><br></pre></td></tr></table></figure></p>
+<p>RW+ 表示 alice 有权限对 foo 做任何操作，包括创建、读写、删除、push、rewind 等。<br>RW 表示 bob 可以对 foo 有读写的权限。<br>R 表示 carol 可以对 foo 有只读权限，可以 clone/fetch。  </p>
+<h2 id="SSH-和-Git-Daemon"><a href="#SSH-和-Git-Daemon" class="headerlink" title="SSH 和 Git Daemon"></a>SSH 和 Git Daemon</h2><p>Gitolite 没有提供公开访问仓库的方法，所有的访问都必须通过 SSH ，也就是说，每个用户要 clone 或者修改托管在 Gitolite 上的仓库，都必须先在 gitolite-admin 仓库里存放上自己 SSH 公钥。</p>
+<p>那如果真的有需要公开某个仓库的权限要怎么办，许多文章都提到了 git-daemon 。不过，我个人在 ubuntu 和 centos 上都尝试过 git-daemon 来公开仓库权限，但都没有成功。因为不是项目必须，所以也没有再深入研究。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><a href="http://gitolite.com/gitolite/glssh/index.html" target="_blank" rel="noopener">how gitolite uses ssh</a></li>
+<li><a href="https://stackoverflow.com/questions/10843781/gitolite-adding-user-not-working-and-denied-by-fallthru-when-cloning-as-root/10844231#10844231" target="_blank" rel="noopener">gitolite adding user not working</a></li>
+<li><a href="https://stackoverflow.com/questions/29839688/gitolite-restrict-access-to-branch" target="_blank" rel="noopener">gitolite restrict access to branch</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/09/02/2017-09-02-react-redux-shopping-cart-demo/" rel="next" title="React + Redux 应用的开发流程，以购物车为例">
+                <i class="fa fa-chevron-left"></i> React + Redux 应用的开发流程，以购物车为例
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/09/28/2017-09-28-how-to-build-private-repo-server-for-android-source-code/" rel="prev" title="搭建支持 Repo 的 Android 源码镜像（Repo 服务器）">
+                搭建支持 Repo 的 Android 源码镜像（Repo 服务器） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ttimehc</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/chasecs" title="GitHub &rarr; https://github.com/chasecs" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:ttimehc@gmail.com" title="E-Mail &rarr; mailto:ttimehc@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Git-服务器的选择"><span class="nav-number">1.</span> <span class="nav-text">Git 服务器的选择</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#搭建-Gitolite-的系统环境"><span class="nav-number">2.</span> <span class="nav-text">搭建 Gitolite 的系统环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建-git-用户"><span class="nav-number">3.</span> <span class="nav-text">创建 git 用户</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#客户端传送公钥"><span class="nav-number">4.</span> <span class="nav-text">客户端传送公钥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#服务端安装-gitolite"><span class="nav-number">5.</span> <span class="nav-text">服务端安装 gitolite</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#gitolite-的管理"><span class="nav-number">6.</span> <span class="nav-text">gitolite 的管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#添加新成员和新仓库"><span class="nav-number">7.</span> <span class="nav-text">添加新成员和新仓库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SSH-和-Git-Daemon"><span class="nav-number">8.</span> <span class="nav-text">SSH 和 Git Daemon</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">9.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ttimehc</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'eb2224abc6c383a0371e',
+    clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+    repo: 'chasecs.github.io',
+    owner: 'chasecs',
+    admin: ['chasecs'],
+    id: md5(location.pathname),
+    
+      language: 'en, zh-CN',
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
