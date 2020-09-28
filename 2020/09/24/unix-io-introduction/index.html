@@ -105,7 +105,7 @@
 <meta property="og:description" content="内容提要  5 种 I/O 模型及一些示例 目前主流的 I/O 方案 epoll / kqueue">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://www.masterraghu.com/subjects/np/introduction/unix_network_programming_v1.3/files/06fig06.gif">
-<meta property="og:updated_time" content="2020-09-27T15:18:43.130Z">
+<meta property="og:updated_time" content="2020-09-28T04:34:44.445Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Unix I&#x2F;O 主要模型介绍">
 <meta name="twitter:description" content="内容提要  5 种 I/O 模型及一些示例 目前主流的 I/O 方案 epoll / kqueue">
@@ -376,7 +376,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2020-09-27 23:18:43" itemprop="dateModified" datetime="2020-09-27T23:18:43+08:00">2020-09-27</time>
+                <time title="修改时间：2020-09-28 12:34:44" itemprop="dateModified" datetime="2020-09-28T12:34:44+08:00">2020-09-28</time>
               
             
           </span>
@@ -436,6 +436,29 @@
 <p><img src="http://www.masterraghu.com/subjects/np/introduction/unix_network_programming_v1.3/files/06fig06.gif" alt="graphics/06fig06.gif"></p>
 <p>UNP对I/O模型的分类比较严格，认为只有前4个都属于同步的（synchronous），只有第5个属于异步（asynchronous）。</p>
 <p>不过，目前网上也有很多说法认为把 I/O 复用，epoll，kqueue 归为异步 I/O，如下表：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Blocking</th>
+<th>非阻塞</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Synchronous</td>
+<td>read/write</td>
+<td>read/write(O_NONBLOCK)</td>
+</tr>
+<tr>
+<td>Asynchronous</td>
+<td>I/O multiplexing(select/poll/epoll)</td>
+<td>AIO</td>
+</tr>
+</tbody>
+</table>
+</div>
 <p>虽然在分类上有不通的说法，但弄清楚 I/O 最关键的阻塞、非阻塞等概念，对于理解各种不同的 I/O 方案就没有太大问题。</p>
 <h2 id="阻塞式-I-O-（-Blocking-I-O）"><a href="#阻塞式-I-O-（-Blocking-I-O）" class="headerlink" title="阻塞式 I/O （ Blocking I/O）"></a>阻塞式 I/O （ Blocking I/O）</h2><p>阻塞式是最原始的 I/O 模型，默认情况下，包括 read、 write、connect、accept 等的 I/O 操作默认都是阻塞式的。</p>
 <p>阻塞式 I/O，当系统调用（如下面代码中的 <code>write</code> )执行后，进程会停止继续执行，直到该系统调用完成工作（<code>write</code>写入数据），进程才继续执行之后的代码。</p>
