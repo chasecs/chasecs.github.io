@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Go 源码分析：scheduler 工作流程 - 编程札记 Programming Notes</title>
+  <meta property="og:title" content="Go 源码分析：scheduler 工作流程 - 编程札记 Programming Notes" />
+  <meta name="twitter:title" content="Go 源码分析：scheduler 工作流程 - 编程札记 Programming Notes" />
+  <meta name="description" content="注：本文涉及的源码为 go 1.13 版本
+最近一直在看 Go 调度器的源码，查了不少资料，对 goroutine 的调度过程有了一些了解，也对 Go 如何支撑高并发、并行计算有个大概的认识。
+Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocator/garbage collector）1 。
+调度器相关的代码主要在 runtime  的 proc.go ， runtime1.go ， runtime2.go 等几个文件，此外还有一些 Go 汇编代码，这些代码大部分在 2015 年成形，至今没有大的修改，目前看来还是比较稳定的。">
+  <meta property="og:description" content="注：本文涉及的源码为 go 1.13 版本
+最近一直在看 Go 调度器的源码，查了不少资料，对 goroutine 的调度过程有了一些了解，也对 Go 如何支撑高并发、并行计算有个大概的认识。
+Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocator/garbage collector）1 。
+调度器相关的代码主要在 runtime  的 proc.go ， runtime1.go ， runtime2.go 等几个文件，此外还有一些 Go 汇编代码，这些代码大部分在 2015 年成形，至今没有大的修改，目前看来还是比较稳定的。">
+  <meta name="twitter:description" content="注：本文涉及的源码为 go 1.13 版本
+最近一直在看 Go 调度器的源码，查了不少资料，对 goroutine 的调度过程有了一些了解，也对 Go 如何支撑高并发、并行计算有个大概的认识。
+Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回 …">
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/posts/go-scheduler-introduction/" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+
+<body>
+    
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-tags"><a href="/tags/" title="Tags">Tags</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+    
+  <div class="main" role="main">
+    <article class="article">
+      
+      
+      <h1 class="article-title">Go 源码分析：scheduler 工作流程</h1>
+      
+      <hr class="article-title-bottom">
+      <ul class="article-meta">
+        <li class="article-meta-date"><time>June 8, 2020</time></li>
+        <li class="article-meta-categories">
+          <a href="/categories/go/">
+            <i class="fas fa-folder"></i>
+            go
+          </a>&nbsp;
+        </li>
+      </ul>
+      
+<aside class="toc">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#三个核心概念-gmp">三个核心概念 GMP</a></li>
+    <li><a href="#调度工作概况">调度工作概况</a>
+      <ul>
+        <li><a href="#工作窃取work-stealing">工作窃取（work-stealing）</a></li>
+        <li><a href="#系统阻塞blocking">系统阻塞（blocking）</a></li>
+      </ul>
+    </li>
+    <li><a href="#启动过程中的调度工作">启动过程中的调度工作</a>
+      <ul>
+        <li><a href="#-newproc-函数的工作细节"><code> newproc()</code> 函数的工作细节</a></li>
+      </ul>
+    </li>
+    <li><a href="#schedule-调度工作流程"><code>schedule()</code> 调度工作流程</a>
+      <ul>
+        <li><a href="#找到可执行的-g">找到可执行的 G</a></li>
+        <li><a href="#wakep唤醒闲置的-p-去找事做"><code>wakep()</code>，唤醒闲置的 P 去找事做</a></li>
+        <li><a href="#执行-g-func-executegp-inherittime">执行 G ，<code>func execute(gp, inheritTime)</code></a></li>
+        <li><a href="#goexit-并开启新一轮的-schedule"><code>goexit()</code> 并开启新一轮的 <code>schedule()</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#参考资料">参考资料</a></li>
+  </ul>
+</nav>
+</aside>
+      <p><em>注：本文涉及的源码为 go 1.13 版本</em></p>
+<p>最近一直在看 Go 调度器的源码，查了不少资料，对 goroutine 的调度过程有了一些了解，也对 Go 如何支撑高并发、并行计算有个大概的认识。</p>
+<p>Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocator/garbage collector）<a href="https://www.quora.com/How-does-the-Go-runtime-work-What-does-it-consist-of-What-functionalities-does-it-provide-and-what-can-be-expected-from-a-developer-perspective">1</a> 。</p>
+<p>调度器相关的代码主要在 <code>runtime </code> 的 <code>proc.go</code> ， <code>runtime1.go</code> ， <code>runtime2.go</code> 等几个文件，此外还有一些 Go 汇编代码，这些代码大部分在 2015 年成形，至今没有大的修改，目前看来还是比较稳定的。</p>
+<h2 id="三个核心概念-gmp">三个核心概念 GMP</h2>
+<p>在 Go 调度器的世界里，有三个主要的角色：M，P，G，调度过程基本围绕这三兄弟展开。</p>
+<ul>
+<li>
+<p>G，即是 goroutine，由 Go 代码产生， Go 程序在运行过程中通常会产生多个  goroutine。</p>
+</li>
+<li>
+<p>M，是 Go 对操作系统线程（OS thread）的封装，可以看作操作系统线程，所有的 G 都交给 M 负责具体执行 。在调度过程中，M 有 spinning /non-spinning，parking/unparking 的状态，具体在下文介绍调度工作时解释。</p>
+</li>
+<li>
+<p>P，是处理单元，全称 Processor。P 的数量表示最多可以有多少个线程在并行（parallel）执行，此外，P 也表示 G 被执行时必需的资源和上下文，每一个 M 必须绑定一个 P 才能执行 G。P 主要有 idle/running 等状态，同样在下文结合调度工作介绍</p>
+</li>
+</ul>
+<p>在运行过程中，这三个实体是紧密关联的。G 会出现在两个队列上，一个是 Global Run Queue（GRQ），另一个是 Local Run Queue (LRQ)。LRQ 有多个同时存在，每个 LRQ 都由一个 P 负责管理。而 GRQ 上的 G，通常是还没被分配到 LRQ 的。</p>
+<p>每个M 工作时都关联着一个 P，按调度规则交替执行对应 LRQ 里面的 G。每个 LRQ ，可看作一个局部调度单位，调度队列上的 G。</p>
+<p>他们的关系如下图：
+<img src="/images/go-scheduler-introduction/image-20200608114518442.png" alt="image alt text">
+<!-- raw HTML omitted --></p>
+<h2 id="调度工作概况">调度工作概况</h2>
+<h3 id="工作窃取work-stealing">工作窃取（work-stealing）</h3>
+<p>Go 调度工作有两个主要的场景，第一个是工作窃取（work-stealing）。假设现在分别有 M1P1， M2P2 各自在执行自己的 LRQ。M1P1 处理得比较快，先把自己的 LRQ 清空了，它会先去 GRQ 寻找可执行 G，如果 GRQ 也清空了，它就会去尝试去窃取其它 P 的 LRQ ，从那里取走一半的 G。</p>
+<p>实现这一步骤的关键函数是 <code>runtime/proc.go</code>  的 <code>func findrunnable() (gp *g, inheritTime bool)</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">findrunnable</span><span class="p">()</span> <span class="p">(</span><span class="nx">gp</span> <span class="o">*</span><span class="nx">g</span><span class="p">,</span> <span class="nx">inheritTime</span> <span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+
+<span class="o">...</span>
+
+	<span class="c1">// 尝试从 LRQ 获取可执行的 g
+</span><span class="c1"></span>	<span class="k">if</span> <span class="nx">gp</span><span class="p">,</span> <span class="nx">inheritTime</span> <span class="o">:=</span> <span class="nf">runqget</span><span class="p">(</span><span class="nx">_p_</span><span class="p">);</span> <span class="nx">gp</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">gp</span><span class="p">,</span> <span class="nx">inheritTime</span>
+	<span class="p">}</span>
+
+	<span class="c1">// 尝试从 LRQ 获取可执行的 g
+</span><span class="c1"></span>	<span class="k">if</span> <span class="nx">sched</span><span class="p">.</span><span class="nx">runqsize</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">{</span>
+		<span class="nf">lock</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">sched</span><span class="p">.</span><span class="nx">lock</span><span class="p">)</span>
+		<span class="nx">gp</span> <span class="o">:=</span> <span class="nf">globrunqget</span><span class="p">(</span><span class="nx">_p_</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+		<span class="nf">unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">sched</span><span class="p">.</span><span class="nx">lock</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nx">gp</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">gp</span><span class="p">,</span> <span class="kc">false</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+
+<span class="o">...</span>
+  
+			<span class="c1">//尝试从其它 P 截走部分 g
+</span><span class="c1"></span>			<span class="k">if</span> <span class="nx">gp</span> <span class="o">:=</span> <span class="nf">runqsteal</span><span class="p">(</span><span class="nx">_p_</span><span class="p">,</span> <span class="nx">p2</span><span class="p">,</span> <span class="nx">stealRunNextG</span><span class="p">);</span> <span class="nx">gp</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+				<span class="k">return</span> <span class="nx">gp</span><span class="p">,</span> <span class="kc">false</span>
+			<span class="p">}</span>
+
+<span class="o">...</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="系统阻塞blocking">系统阻塞（blocking）</h3>
+<p>另一个重要的调度场景发生在系统调用（syscall）等产生阻塞时。</p>
+<p>例如 M1 在执行 G1 的过程中，G1 发出了一个 file I/O 的系统调用，将导致 M1 发生阻塞，等待必须系统调用完成。此时LRQ的无法被 M1 执行，如果只是干等，将是造成的资源浪费。此时，当前的 P 将被释放，自行去寻找其它 M 执行它的 LRQ。</p>
+<p>这一过程主要调用了 <code>runtime/proc.go</code>   的以下几个函数：</p>
+<ul>
+<li>调用 <code>func entersyscallblock() </code> / <code>func entersyscallblock_handoff() </code> 准备释放 P</li>
+<li>调用 <code>func handoffp(_p_ *p)</code>  释放 P</li>
+<li>调用 <code>func startm(*p* *p, spinning bool)</code> ，让 P 去寻找新的 M</li>
+</ul>
+<p>当 G1 完成了系统调用，G1 将重新寻找一个 P，继续执行它。这一过程涉及到的主要函数如下：</p>
+<ul>
+<li>调用 <code>func exitsyscall()</code> 退出系统调用</li>
+<li>调用 <code>func exitsyscallfast(oldp *p)</code> 尝试找回原来的 P 或者一个空闲状态的 P</li>
+<li>如果第一次寻找 P 失败，再调用 <code>func exitsyscall0(gp *g)</code> ，再尝试找一个 P 或者放回 GRQ 等待</li>
+</ul>
+<h2 id="启动过程中的调度工作">启动过程中的调度工作</h2>
+<p>Go 调度器的工作贯穿程序运行的整个过程，Go 程序一启动就开始相关工作。Go 启动流程如下图所示
+<img src="/images/go-scheduler-introduction/image-20200607224537595.png" alt="image alt text">
+<!-- raw HTML omitted --></p>
+<p>Go 程序的启动过程，网络上雨痕的《1.5.1 Golang 源码剖析》[github.com/qyuhen/book]有比较详细的介绍，这里侧重关注和调度器相关的部分。</p>
+<p>启动的顺序几个比较重要的函数依次是：</p>
+<ul>
+<li>调用 <code>osinit()</code>， 主要获取本机 CPU 的数量</li>
+<li>调用 <code>schedinit()</code>，主要确定 P 的数量，P 默认和 CPU 的逻辑处理器数量（logical processors）相同，也可以通过环境变量 <code>GOMAXPROCS</code>制定</li>
+<li>创建 G，主要依靠 <code>newproc()</code> 函数</li>
+<li><code>func mstart()</code>， 初始化 M，并调用 <code>schedule()</code> 函数开始调度</li>
+</ul>
+<h3 id="-newproc-函数的工作细节"><code> newproc()</code> 函数的工作细节</h3>
+<p><code>newproc()</code>，其任务是创建一个 G，并把它放入执行队列，主要通过 <code>func newproc1(...)</code> 实现，核心过程如下：</p>
+<ol>
+<li>创建一个 g，</li>
+<li>把 g 放到执行队列，通过 <code>func runqput(_p_, newg, true)</code></li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">newproc1</span><span class="p">(</span><span class="nx">fn</span> <span class="o">*</span><span class="nx">funcval</span><span class="p">,</span> <span class="nx">argp</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span><span class="p">,</span> <span class="nx">narg</span> <span class="kt">int32</span><span class="p">,</span> <span class="nx">callergp</span> <span class="o">*</span><span class="nx">g</span><span class="p">,</span> <span class="nx">callerpc</span> <span class="kt">uintptr</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="o">...</span>
+  
+  <span class="c1">//尝试获取一个空闲的 newg，如果没有，新建一个
+</span><span class="c1"></span>  	<span class="nx">newg</span> <span class="o">:=</span> <span class="nf">gfget</span><span class="p">(</span><span class="nx">_p_</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">newg</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+      <span class="c1">//新建 g
+</span><span class="c1"></span>      <span class="nx">newg</span> <span class="p">=</span> <span class="nf">malg</span><span class="p">(</span><span class="nx">_StackMin</span><span class="p">)</span>
+      <span class="nf">casgstatus</span><span class="p">(</span><span class="nx">newg</span><span class="p">,</span> <span class="nx">_Gidle</span><span class="p">,</span> <span class="nx">_Gdead</span><span class="p">)</span>
+      <span class="nf">allgadd</span><span class="p">(</span><span class="nx">newg</span><span class="p">)</span> 
+    <span class="p">}</span>
+  
+ <span class="o">...</span>
+  <span class="c1">//把 newg 放到执行队列上
+</span><span class="c1"></span>  <span class="nf">runqput</span><span class="p">(</span><span class="nx">_p_</span><span class="p">,</span> <span class="nx">newg</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
+  
+  <span class="o">...</span>
+  
+<span class="p">}</span>
+
+	
+</code></pre></td></tr></table>
+</div>
+</div><p>这其中：</p>
+<ul>
+<li><code> func gfget(*p*)</code>， 这是获取 G 最常用的方法，从空闲的 G 列表里获取，如果没有，再新创建一个。</li>
+<li><code>func runqput(*p* *p, gp *g, next bool)</code>，把 g 放到执行队列，优先放到本地执行队列 LRQ，如果 LRQ 已满，放到全局队列 GRQ，使用 <code>func runqputslow(_p_, gp, h, t)</code>。</li>
+</ul>
+<p>在完成 <code>newproc()</code> 函数之后，调用 <code>mstart()</code>，该函数完成 M 的初始化工作后，调用启动调度的函数 <code>schedule()</code>，程序至此开始进入“执行——调度——执行”的循环之中。</p>
+<h2 id="schedule-调度工作流程"><code>schedule()</code> 调度工作流程</h2>
+<p>Go 调度的过程，其实就是 <code>schedule()</code> 函数运行的过程，它的工作流程大致如下图：
+<img src="/images/go-scheduler-introduction/image-20200608004720164.png" alt="image alt text">
+<!-- raw HTML omitted --></p>
+<p><code>schedule()</code>核心工作是，找到一个可执行的 G，安排它被执行。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">schedule</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="o">...</span>
+  
+  <span class="kd">var</span> <span class="nx">gp</span> <span class="o">*</span><span class="nx">g</span>
+  
+  <span class="o">...</span>
+  
+	<span class="k">if</span> <span class="nx">gp</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="c1">//隔一定的周期，去 GRQ 看看有没有待执行的 G
+</span><span class="c1"></span>		<span class="k">if</span> <span class="nx">_g_</span><span class="p">.</span><span class="nx">m</span><span class="p">.</span><span class="nx">p</span><span class="p">.</span><span class="nf">ptr</span><span class="p">().</span><span class="nx">schedtick</span><span class="o">%</span><span class="mi">61</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">sched</span><span class="p">.</span><span class="nx">runqsize</span> <span class="p">&gt;</span> <span class="mi">0</span> <span class="p">{</span>
+			<span class="nf">lock</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">sched</span><span class="p">.</span><span class="nx">lock</span><span class="p">)</span>
+			<span class="nx">gp</span> <span class="p">=</span> <span class="nf">globrunqget</span><span class="p">(</span><span class="nx">_g_</span><span class="p">.</span><span class="nx">m</span><span class="p">.</span><span class="nx">p</span><span class="p">.</span><span class="nf">ptr</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>
+			<span class="nf">unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">sched</span><span class="p">.</span><span class="nx">lock</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+  
+	<span class="k">if</span> <span class="nx">gp</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+    <span class="c1">//尝试从 LRQ 获取 G
+</span><span class="c1"></span>		<span class="nx">gp</span><span class="p">,</span> <span class="nx">inheritTime</span> <span class="p">=</span> <span class="nf">runqget</span><span class="p">(</span><span class="nx">_g_</span><span class="p">.</span><span class="nx">m</span><span class="p">.</span><span class="nx">p</span><span class="p">.</span><span class="nf">ptr</span><span class="p">())</span>
+	<span class="p">}</span>
+  
+	<span class="k">if</span> <span class="nx">gp</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+   <span class="c1">//尝试其它方法获取 G 
+</span><span class="c1"></span>		<span class="nx">gp</span><span class="p">,</span> <span class="nx">inheritTime</span> <span class="p">=</span> <span class="nf">findrunnable</span><span class="p">()</span> <span class="c1">// blocks until work is available
+</span><span class="c1"></span>	<span class="p">}</span>
+
+	
+	<span class="c1">// 判断是否需要有空闲的 P ，唤醒它去寻找工作
+</span><span class="c1"></span>	<span class="k">if</span> <span class="nx">tryWakeP</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="nx">atomic</span><span class="p">.</span><span class="nf">Load</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">sched</span><span class="p">.</span><span class="nx">npidle</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">atomic</span><span class="p">.</span><span class="nf">Load</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">sched</span><span class="p">.</span><span class="nx">nmspinning</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+			<span class="nf">wakep</span><span class="p">()</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+
+  <span class="o">...</span>
+  
+  <span class="c1">//执行 G
+</span><span class="c1"></span>	<span class="nf">execute</span><span class="p">(</span><span class="nx">gp</span><span class="p">,</span> <span class="nx">inheritTime</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>细分下来，关键几步如下：</p>
+<h3 id="找到可执行的-g">找到可执行的 G</h3>
+<p>这一步骤主要涉及的函数如下</p>
+<ul>
+<li><code>func globrunqget(_p_ *p, max int32) *g </code>，从 GRQ 获取一些 G</li>
+<li><code>func runqget(*g*.m.p.ptr())</code> ，从当前的 LRQ 获取一个 G 来执行</li>
+</ul>
+<h3 id="wakep唤醒闲置的-p-去找事做"><code>wakep()</code>，唤醒闲置的 P 去找事做</h3>
+<p>这一步触发是有条件的，<code>atomic.Load(&amp;sched.npidle) != 0 &amp;&amp; atomic.Load(&amp;sched.nmspinning) == 0</code>，它的关键步骤是调用 <code>startm(nil,true)</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">startm</span><span class="p">(</span><span class="nx">_p_</span> <span class="o">*</span><span class="nx">p</span><span class="p">,</span> <span class="nx">spinning</span> <span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+	
+  <span class="o">...</span>
+  
+ <span class="c1">//先寻找一个空闲的 M 
+</span><span class="c1"></span>	<span class="nx">mp</span> <span class="o">:=</span> <span class="nf">mget</span><span class="p">()</span>
+	<span class="nf">unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">sched</span><span class="p">.</span><span class="nx">lock</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">mp</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">fn</span> <span class="kd">func</span><span class="p">()</span>
+		<span class="k">if</span> <span class="nx">spinning</span> <span class="p">{</span>
+			<span class="c1">// The caller incremented nmspinning, so set m.spinning in the new M.
+</span><span class="c1"></span>			<span class="nx">fn</span> <span class="p">=</span> <span class="nx">mspinning</span>
+		<span class="p">}</span>
+   <span class="c1">//没有空闲的 M ，新建一个来执行 _p_
+</span><span class="c1"></span>		<span class="nf">newm</span><span class="p">(</span><span class="nx">fn</span><span class="p">,</span> <span class="nx">_p_</span><span class="p">)</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+ 
+  <span class="o">...</span>
+ <span class="c1">// 
+</span><span class="c1"></span>	<span class="nf">notewakeup</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">mp</span><span class="p">.</span><span class="nx">park</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这里涉及到的<code>func newm(fn func(), _p_ *p)</code> 和 <code>func notewakeup(n *note)</code> ，都有调用操作系统线程相关的接口。</p>
+<h3 id="执行-g-func-executegp-inherittime">执行 G ，<code>func execute(gp, inheritTime)</code></h3>
+<p><code>func execute(gp *g, inheritTime bool)</code>的 关键步骤是 <code>gogo(buf *gobuf)</code>，这个函数在 <code>runtime/stub.go</code>文件里是没有函数体的，看相关介绍是由编译器（compiler）生成的，不了解更多内容。</p>
+<h3 id="goexit-并开启新一轮的-schedule"><code>goexit()</code> 并开启新一轮的 <code>schedule()</code></h3>
+<p>执行<code>gogo()</code>之后，会执行 <code>goexit()</code>，这一步比较难发现，出现在更早前执行的 <code>newproc1()</code>函数，（更详细的介绍见 《1.5.1 Golang 源码剖析》P108)：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">newproc1</span><span class="p">(</span><span class="nx">fn</span> <span class="o">*</span><span class="nx">funcval</span><span class="p">,</span> <span class="nx">argp</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span><span class="p">,</span> <span class="nx">narg</span> <span class="kt">int32</span><span class="p">,</span> <span class="nx">callergp</span> <span class="o">*</span><span class="nx">g</span><span class="p">,</span> <span class="nx">callerpc</span> <span class="kt">uintptr</span><span class="p">)</span> <span class="p">{</span>
+
+<span class="o">...</span>
+
+<span class="nx">newg</span><span class="p">.</span><span class="nx">sched</span><span class="p">.</span><span class="nx">pc</span> <span class="p">=</span> <span class="nf">funcPC</span><span class="p">(</span><span class="nx">goexit</span><span class="p">)</span> <span class="o">+</span> <span class="nx">sys</span><span class="p">.</span><span class="nx">PCQuantum</span> <span class="c1">// +PCQuantum so that previous instruction is in same function
+</span><span class="c1"></span><span class="nx">newg</span><span class="p">.</span><span class="nx">sched</span><span class="p">.</span><span class="nx">g</span> <span class="p">=</span> <span class="nf">guintptr</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">newg</span><span class="p">))</span>
+
+<span class="o">...</span>
+
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>而 <code>goexit()</code> 主要功能在 <code>goexit1()</code> （<code>goexit0()</code> ）实现：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-asm" data-lang="asm"><span class="nf">TEXT</span> <span class="no">runtime</span><span class="err">·</span><span class="no">goexit</span><span class="p">(</span><span class="no">SB</span><span class="p">),</span><span class="no">NOSPLIT</span><span class="err">|</span><span class="no">NOFRAME</span><span class="err">|</span><span class="no">TOPFRAME</span><span class="p">,</span><span class="no">$0-0</span>
+	<span class="nf">MOVD</span>	<span class="no">R0</span><span class="p">,</span> <span class="no">R0</span>	<span class="err">//</span> <span class="no">NOP</span>
+	<span class="nf">BL</span>	<span class="no">runtime</span><span class="err">·</span><span class="no">goexit1</span><span class="p">(</span><span class="no">SB</span><span class="p">)</span>	<span class="err">//</span> <span class="no">does</span> <span class="no">not</span> <span class="no">retur</span>
+</code></pre></td></tr></table>
+</div>
+</div><p><code>goexit0()</code> 函数 核心内容如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">goexit0</span><span class="p">(</span><span class="nx">gp</span> <span class="o">*</span><span class="nx">g</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">_g_</span> <span class="o">:=</span> <span class="nf">getg</span><span class="p">()</span>
+
+	<span class="c1">//完成一些善后工作
+</span><span class="c1"></span>	<span class="o">...</span>
+	
+	<span class="c1">//开始新一轮的调度
+</span><span class="c1"></span>	<span class="nf">schedule</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>调度工作大致就是这样就完成一个周期，并开始新的一轮调度。</p>
+<p>最后，想到了一个问题，既然 P 的数量代表同时最多有多少任务并行执行，而且 P 的数量可以人为设置，那么是不是把 P 设置得越大性能就越好呢，是不是 P 等于 1 时就无法充分发挥 CPU 的计算能力？</p>
+<p>其实并不是，这个问题 stackoverflow  有专门的讨论，go 核心开发者 Russ Cox 也写了专门的文章介绍 <a href="https://docs.google.com/document/d/1At2Ls5_fhJQ59kDK2DFVhFu3g5mATSXqqV5QrxinasI/preview">Go 1.5 GOMAXPROCS Default</a> ，很值得一看。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://morsmachine.dk/go-scheduler">Go scheduler</a>  最通俗的介绍文章</li>
+<li><a href="https://www.ardanlabs.com/blog/2015/02/scheduler-tracing-in-go.html">Scheduler Tracing In Go</a> 命令行查看程序的调度细节</li>
+<li><a href="https://docs.google.com/document/d/1ETuA2IOmnaQ4j81AtTGT40Y4_Jr6_IDASEKg0t0dBR8/edit#">Go Preemptive Scheduler Design Doc</a> 调度器的设计文档</li>
+<li><a href="https://docs.google.com/document/d/1TTj4T2JO42uD5ID9e89oa0sLKhJYD0Y_kqxDv3I3XMw/edit#heading=h.mmq8lm48qfcw">Scalable Go Scheduler Design Doc</a>  调度器的设计文档</li>
+<li><a href="https://zboya.github.io/post/go_scheduler/">深入golang runtime的调度</a></li>
+<li><a href="https://qcrao.com/ishare/go-scheduler/">《Go scheduler 源码阅读》</a>  很详尽</li>
+<li><a href="https://www.altoros.com/blog/golang-internals-part-6-bootstrapping-and-memory-allocator-initialization/">Golang Internals, Part 6: Bootstrapping and Memory Allocator Initialization</a>，了解 go 启动过程</li>
+<li><a href="https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part2.html">scheduling-in-go-part2</a>，详尽，但有部分介绍不是很清晰</li>
+</ul>
+    </article>
+
+    
+
+
+    <ul class="pager article-pager">
+      <li class="pager-newer">
+          <a href="/posts/golang-network-programming-implementation/" data-toggle="tooltip" data-placement="top" title="Go 网络编程的实现">&lt; Newer</a>
+      </li>
+      <li class="pager-older">
+        <a href="/posts/analysis-the-bias-of-a-naive-shuffle-algorithm-17-18-10-050/" data-toggle="tooltip" data-placement="top" title="一个错误洗牌算法的分析">Older &gt;</a>
+      </li>
+    </ul>
+  </div>
+
+    
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+    
+</body>
+
+</html>

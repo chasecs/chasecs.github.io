@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>go on 编程札记 Programming Notes</title>
+    <link>https://example.com/categories/go/</link>
+    <description>Recent content in go on 编程札记 Programming Notes</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <copyright>&amp;copy; Copyright 2017 ttimehc@gmail.com</copyright>
+    <lastBuildDate>Sat, 05 Dec 2020 17:36:56 +0800</lastBuildDate>
+    
+	<atom:link href="https://example.com/categories/go/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Go Error 的设计哲学</title>
+      <link>https://example.com/posts/the-philosophy-of-go-error-handling/</link>
+      <pubDate>Sat, 05 Dec 2020 17:36:56 +0800</pubDate>
+      
+      <guid>https://example.com/posts/the-philosophy-of-go-error-handling/</guid>
+      <description>&lt;p&gt;最近阅读了不少关于 Go 错误处理的材料和讨论，总结出 Go Error 的设计哲学主要有两点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;处理所有潜在的错误&lt;/li&gt;
+&lt;li&gt;Errors Are Value&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Go 对错误处理的最初设计和后续优化方案，以及编程过程中处理错误的各种方法，基本都是围绕着这些理念展开的。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Go 网络编程的实现</title>
+      <link>https://example.com/posts/golang-network-programming-implementation/</link>
+      <pubDate>Wed, 22 Jul 2020 00:59:17 +0000</pubDate>
+      
+      <guid>https://example.com/posts/golang-network-programming-implementation/</guid>
+      <description>&lt;p&gt;提要：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;TCP 服务端、客户端示例&lt;/li&gt;
+&lt;li&gt;Network system calls&lt;/li&gt;
+&lt;li&gt;TCP 编程是如何实现的&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, domain name resolution, Unix domain sockets 等连接，此外，还通过 net/http ，net/rpc 等提供了 http，rpc 等主流应用层的连接协议。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Go 源码分析：scheduler 工作流程</title>
+      <link>https://example.com/posts/go-scheduler-introduction/</link>
+      <pubDate>Mon, 08 Jun 2020 13:02:44 +0000</pubDate>
+      
+      <guid>https://example.com/posts/go-scheduler-introduction/</guid>
+      <description>&lt;p&gt;&lt;em&gt;注：本文涉及的源码为 go 1.13 版本&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;最近一直在看 Go 调度器的源码，查了不少资料，对 goroutine 的调度过程有了一些了解，也对 Go 如何支撑高并发、并行计算有个大概的认识。&lt;/p&gt;
+&lt;p&gt;Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocator/garbage collector）&lt;a href=&#34;https://www.quora.com/How-does-the-Go-runtime-work-What-does-it-consist-of-What-functionalities-does-it-provide-and-what-can-be-expected-from-a-developer-perspective&#34;&gt;1&lt;/a&gt; 。&lt;/p&gt;
+&lt;p&gt;调度器相关的代码主要在 &lt;code&gt;runtime &lt;/code&gt; 的 &lt;code&gt;proc.go&lt;/code&gt; ， &lt;code&gt;runtime1.go&lt;/code&gt; ， &lt;code&gt;runtime2.go&lt;/code&gt; 等几个文件，此外还有一些 Go 汇编代码，这些代码大部分在 2015 年成形，至今没有大的修改，目前看来还是比较稳定的。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>构建 Golang Web 应用的两种方法</title>
+      <link>https://example.com/posts/how-to-build-your-golang-web-app/</link>
+      <pubDate>Fri, 01 Nov 2019 18:04:46 +0000</pubDate>
+      
+      <guid>https://example.com/posts/how-to-build-your-golang-web-app/</guid>
+      <description>&lt;p&gt;对前后端分离的 web 项目，golang 后端可以以两种方式提供前端静态文件的访问：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;使用 &lt;code&gt;http.FileServer&lt;/code&gt; 提供静态文件服务&lt;/li&gt;
+&lt;li&gt;使用 &lt;code&gt;go-bindata-assetfs&lt;/code&gt; 将前端静态文件打包成二进制数据，和后端构建到一起&lt;/li&gt;
+&lt;/ol&gt;</description>
+    </item>
+    
+    <item>
+      <title>gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用</title>
+      <link>https://example.com/posts/grpc-go-a-working-demo/</link>
+      <pubDate>Tue, 20 Aug 2019 14:37:37 +0000</pubDate>
+      
+      <guid>https://example.com/posts/grpc-go-a-working-demo/</guid>
+      <description>&lt;p&gt;demo 的代码仓库：&lt;a href=&#34;https://github.com/chasecs/grpc-sorter&#34;&gt;github.com/chasecs/grpc-sorter&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;一基础知识&#34;&gt;一、基础知识&lt;/h2&gt;
+&lt;h3 id=&#34;rpc&#34;&gt;rpc&lt;/h3&gt;
+&lt;p&gt;RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>go channel，buffered 与 unbuffered 的区别</title>
+      <link>https://example.com/posts/golang-channel-buffered-or-unbuffered/</link>
+      <pubDate>Mon, 19 Aug 2019 01:23:29 +0000</pubDate>
+      
+      <guid>https://example.com/posts/golang-channel-buffered-or-unbuffered/</guid>
+      <description>&lt;p&gt;go 通过 goroutine 实现并发，而不同的 goroutine 之间需要通过 channel 来通讯，否则就是两段各行其是的代码。&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

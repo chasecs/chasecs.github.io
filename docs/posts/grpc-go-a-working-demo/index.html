@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用 - 编程札记 Programming Notes</title>
+  <meta property="og:title" content="gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用 - 编程札记 Programming Notes" />
+  <meta name="twitter:title" content="gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用 - 编程札记 Programming Notes" />
+  <meta name="description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter
+一、基础知识
+rpc
+RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。">
+  <meta property="og:description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter
+一、基础知识
+rpc
+RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。">
+  <meta name="twitter:description" content="demo 的代码仓库：github.com/chasecs/grpc-sorter
+一、基础知识
+rpc
+RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。">
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/posts/grpc-go-a-working-demo/" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+
+  <div class="main" role="main">
+    <article class="article">
+      
+      
+      <h1 class="article-title">gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用</h1>
+      
+      <hr class="article-title-bottom">
+      <ul class="article-meta">
+        <li class="article-meta-date"><time>August 20, 2019</time></li>
+        <li class="article-meta-categories">
+          <a href="/categories/go/">
+            <i class="fas fa-folder"></i>
+            go
+          </a>&nbsp;
+        </li>
+      </ul>
+      
+      <p>demo 的代码仓库：<a href="https://github.com/chasecs/grpc-sorter">github.com/chasecs/grpc-sorter</a></p>
+<h2 id="一基础知识">一、基础知识</h2>
+<h3 id="rpc">rpc</h3>
+<p>RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。</p>
+<p>gRPC 是一个 RPC 框架，同类的还有 HTTP RPC，JSON RPC，TCP RPC，关于其它 RPC 协议的介绍见 <a href="https://github.com/astaxie/build-web-application-with-golang/blob/master/zh/08.4.md">RPC</a>。</p>
+<h3 id="protocal-buffers">protocal buffers</h3>
+<p>gRPC 最大的特点是使用 protocal buffers ，简称 protobuf。 protobuf 是 google 开源的一种交换数据机制，有些类似 XML 、JSON，但多了定义远程方法等内容。</p>
+<p>gRPC 开发的第一项工作就是先写 .proto 文件，然后用 protoc 编译器生成相应的代码，供 gPRC 的服务端和客户端调用。<strong>protobuf 跟语言无关，它可以生成不同语言的代码，供不同语言的项目使用。</strong></p>
+<p>因为 protocbuf 是 gRPC 开发的必备知识，所以事先有必要了解它的基本语法，入门教程见官网：<a href="https://developers.google.com/protocol-buffers/docs/overview">protocol buffers</a></p>
+<h2 id="二用-go-开发一个-grpc-demo">二、用 go 开发一个 gRPC demo</h2>
+<p>这个 demo 将开发一个提供快速排序接口的服务端，以及一个发出排序请求的客户端，排序算法在服务端实现，两者之间通过 gPRC 通讯。</p>
+<h3 id="1-配置开发环境">1. 配置开发环境</h3>
+<p>安装 gRPC-go，<a href="https://grpc.io/docs/quickstart/go/">国内方法</a></p>
+<p>安装 protocol buffer <a href="https://medium.com/@erika_dike/installing-the-protobuf-compiler-on-a-mac-a0d397af46b8">方法</a></p>
+<p>项目目录</p>
+<pre><code>grpc-sorter
+|
+├── protobuf // 存放 protobuf 生成的 go 代码
+|   └── sorter
+├── sorter_server // 服务端项目目录
+├── sorter_client // 客户端项目目录
+└── sorter.proto 
+</code></pre><h3 id="2-编写-sorterproto-文件">2. 编写 <code>sorter.proto</code> 文件</h3>
+<p><code>sorter.proto</code> 如下：</p>
+<pre><code>syntax = &quot;proto3&quot;;
+package sorter;
+
+message Numbers {
+  repeated int64  numbers = 1;
+}
+
+service Sorter {
+  rpc QuickSort(Numbers) returns (Numbers) {}
+}
+
+</code></pre><p>使用 protoc 命令生成 go 代码到 <code>protobuf/sorter</code> 目录：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">protoc --go_out<span class="o">=</span><span class="nv">plugins</span><span class="o">=</span>grpc:protobuf/sorter sorter.proto
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="3-实现服务端代码">3. 实现服务端代码</h3>
+<p><code>sorter_server/server.go</code> 主要代码如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">const</span> <span class="p">(</span>
+	<span class="nx">port</span> <span class="p">=</span> <span class="s">&#34;:50051&#34;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span> <span class="nx">server</span> <span class="kd">struct</span><span class="p">{}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">server</span><span class="p">)</span> <span class="nf">QuickSort</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">in</span> <span class="o">*</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Numbers</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Numbers</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">qsort</span><span class="p">.</span><span class="nf">QuickSort</span><span class="p">(</span><span class="nx">in</span><span class="p">.</span><span class="nx">Numbers</span><span class="p">)</span>
+	<span class="k">return</span> <span class="nx">in</span><span class="p">,</span> <span class="kc">nil</span>
+<span class="p">}</span>
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">lis</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nf">Listen</span><span class="p">(</span><span class="s">&#34;tcp&#34;</span><span class="p">,</span> <span class="nx">port</span><span class="p">)</span>
+	<span class="nx">s</span> <span class="o">:=</span> <span class="nx">grpc</span><span class="p">.</span><span class="nf">NewServer</span><span class="p">()</span>
+	<span class="nx">pb</span><span class="p">.</span><span class="nf">RegisterSorterServer</span><span class="p">(</span><span class="nx">s</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">server</span><span class="p">{})</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nf">Serve</span><span class="p">(</span><span class="nx">lis</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;failed to serve: %v&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></td></tr></table>
+</div>
+</div><p>完整的服务端代码见：<a href="https://github.com/chasecs/grpc-sorter/tree/master/sorter_server">github.com/chasecs/grpc-sorter/sorter_server</a></p>
+<h3 id="4-客户端开发">4. 客户端开发</h3>
+<p><code>sorter_client/main.go</code> 主要代码:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&#34;log&#34;</span>
+	<span class="s">&#34;golang.org/x/net/context&#34;</span>
+	<span class="s">&#34;google.golang.org/grpc&#34;</span>
+	<span class="nx">pb</span> <span class="s">&#34;grpc-sorter/protobuf/sorter&#34;</span>
+<span class="p">)</span>
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="kd">var</span> <span class="nx">conn</span> <span class="o">*</span><span class="nx">grpc</span><span class="p">.</span><span class="nx">ClientConn</span>
+	<span class="nx">conn</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">grpc</span><span class="p">.</span><span class="nf">Dial</span><span class="p">(</span><span class="s">&#34;:50051&#34;</span><span class="p">,</span> <span class="nx">grpc</span><span class="p">.</span><span class="nf">WithInsecure</span><span class="p">())</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;did not connect: %s&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">defer</span> <span class="nx">conn</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+	<span class="nx">c</span> <span class="o">:=</span> <span class="nx">pb</span><span class="p">.</span><span class="nf">NewSorterClient</span><span class="p">(</span><span class="nx">conn</span><span class="p">)</span>
+
+	<span class="kd">var</span> <span class="nx">raw</span> <span class="p">=</span> <span class="p">[]</span><span class="kt">int64</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">}</span>
+	<span class="nx">response</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nf">QuickSort</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nf">Background</span><span class="p">(),</span> <span class="o">&amp;</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Numbers</span><span class="p">{</span><span class="nx">Numbers</span><span class="p">:</span> <span class="nx">raw</span><span class="p">})</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;Error when calling QuickSort: %s&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;Response from server: %v&#34;</span><span class="p">,</span> <span class="nx">response</span><span class="p">.</span><span class="nx">Numbers</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>至此，这组 grpc 即开发完成。</p>
+<h3 id="5-运行">5. 运行</h3>
+<p>先运行服务端：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">go run sorter_server/server.go
+</code></pre></td></tr></table>
+</div>
+</div><p>再运行客户端，输出排序结果:</p>
+<pre><code>go run sorter_client/main.go 
+...Response from server: [1 3 5 6 8]
+
+</code></pre>
+    </article>
+
+    
+
+
+    <ul class="pager article-pager">
+      <li class="pager-newer">
+          <a href="/posts/how-to-build-your-golang-web-app/" data-toggle="tooltip" data-placement="top" title="构建 Golang Web 应用的两种方法">&lt; Newer</a>
+      </li>
+      <li class="pager-older">
+        <a href="/posts/golang-channel-buffered-or-unbuffered/" data-toggle="tooltip" data-placement="top" title="go channel，buffered 与 unbuffered 的区别">Older &gt;</a>
+      </li>
+    </ul>
+  </div>
+
+
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+</body>
+</html>

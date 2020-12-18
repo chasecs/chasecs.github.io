@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Posts - 编程札记 Programming Notes</title>
+  <meta property="og:title" content="Posts - 编程札记 Programming Notes" />
+  <meta name="twitter:title" content="Posts - 编程札记 Programming Notes" />
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/posts/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+  <link href="/posts/index.xml" rel="alternate" type="application/rss+xml" title="编程札记 Programming Notes" />
+  <link href="/posts/index.xml" rel="feed" type="application/rss+xml" title="编程札记 Programming Notes" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+
+  <div class="breadcrumb">
+    Posts
+  </div>
+  <div class="main" role="main">
+    <section class="list section-list">
+      <article class="article">
+        <a href="/posts/the-philosophy-of-go-error-handling/" class="article-titles">
+          <h2 class="article-title">Go Error 的设计哲学</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>December 5, 2020</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/go/">
+              <i class="fas fa-folder"></i>
+              go
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p>最近阅读了不少关于 Go 错误处理的材料和讨论，总结出 Go Error 的设计哲学主要有两点：</p>
+<ul>
+<li>处理所有潜在的错误</li>
+<li>Errors Are Value</li>
+</ul>
+<p>Go 对错误处理的最初设计和后续优化方案，以及编程过程中处理错误的各种方法，基本都是围绕着这些理念展开的。</p>
+        </div>
+        <div class="article-readmore"><a href="/posts/the-philosophy-of-go-error-handling/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/unix-io-introduction/" class="article-titles">
+          <h2 class="article-title">Unix I/O 主要模型介绍</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>September 24, 2020</time></li>
+        </ul>
+        <div class="article-content">
+          <blockquote>
+<ul>
+<li>5 种 I/O 模型及一些示例</li>
+<li>目前主流的 I/O 方案 epoll / kqueue</li>
+</ul>
+</blockquote>
+        </div>
+        <div class="article-readmore"><a href="/posts/unix-io-introduction/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/golang-network-programming-implementation/" class="article-titles">
+          <h2 class="article-title">Go 网络编程的实现</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>July 22, 2020</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/go/">
+              <i class="fas fa-folder"></i>
+              go
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p>提要：</p>
+<ul>
+<li>TCP 服务端、客户端示例</li>
+<li>Network system calls</li>
+<li>TCP 编程是如何实现的</li>
+</ul>
+<p>Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, domain name resolution, Unix domain sockets 等连接，此外，还通过 net/http ，net/rpc 等提供了 http，rpc 等主流应用层的连接协议。</p>
+        </div>
+        <div class="article-readmore"><a href="/posts/golang-network-programming-implementation/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/go-scheduler-introduction/" class="article-titles">
+          <h2 class="article-title">Go 源码分析：scheduler 工作流程</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>June 8, 2020</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/go/">
+              <i class="fas fa-folder"></i>
+              go
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p><em>注：本文涉及的源码为 go 1.13 版本</em></p>
+<p>最近一直在看 Go 调度器的源码，查了不少资料，对 goroutine 的调度过程有了一些了解，也对 Go 如何支撑高并发、并行计算有个大概的认识。</p>
+<p>Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocator/garbage collector）<a href="https://www.quora.com/How-does-the-Go-runtime-work-What-does-it-consist-of-What-functionalities-does-it-provide-and-what-can-be-expected-from-a-developer-perspective">1</a> 。</p>
+<p>调度器相关的代码主要在 <code>runtime </code> 的 <code>proc.go</code> ， <code>runtime1.go</code> ， <code>runtime2.go</code> 等几个文件，此外还有一些 Go 汇编代码，这些代码大部分在 2015 年成形，至今没有大的修改，目前看来还是比较稳定的。</p>
+        </div>
+        <div class="article-readmore"><a href="/posts/go-scheduler-introduction/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/analysis-the-bias-of-a-naive-shuffle-algorithm-17-18-10-050/" class="article-titles">
+          <h2 class="article-title">一个错误洗牌算法的分析</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>January 3, 2020</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/algorithm/">
+              <i class="fas fa-folder"></i>
+              Algorithm
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p>将一个长度为 n 的有序数组，重新打乱，随机排序，它算法实现被称作洗牌算法，得名于它的典型应用，扑克牌洗牌。</p>
+        </div>
+        <div class="article-readmore"><a href="/posts/analysis-the-bias-of-a-naive-shuffle-algorithm-17-18-10-050/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/introduction-to-swagger-a-tool-simplify-your-api-development/" class="article-titles">
+          <h2 class="article-title">利用 swagger 管理 API 开发</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>November 20, 2019</time></li>
+        </ul>
+        <div class="article-content">
+          <p>swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。</p>
+        </div>
+        <div class="article-readmore"><a href="/posts/introduction-to-swagger-a-tool-simplify-your-api-development/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/how-to-build-your-golang-web-app/" class="article-titles">
+          <h2 class="article-title">构建 Golang Web 应用的两种方法</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>November 1, 2019</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/go/">
+              <i class="fas fa-folder"></i>
+              go
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p>对前后端分离的 web 项目，golang 后端可以以两种方式提供前端静态文件的访问：</p>
+<ol>
+<li>使用 <code>http.FileServer</code> 提供静态文件服务</li>
+<li>使用 <code>go-bindata-assetfs</code> 将前端静态文件打包成二进制数据，和后端构建到一起</li>
+</ol>
+        </div>
+        <div class="article-readmore"><a href="/posts/how-to-build-your-golang-web-app/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/grpc-go-a-working-demo/" class="article-titles">
+          <h2 class="article-title">gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>August 20, 2019</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/go/">
+              <i class="fas fa-folder"></i>
+              go
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p>demo 的代码仓库：<a href="https://github.com/chasecs/grpc-sorter">github.com/chasecs/grpc-sorter</a></p>
+<h2 id="一基础知识">一、基础知识</h2>
+<h3 id="rpc">rpc</h3>
+<p>RPC 是一种用于主要用于服务器通讯的 API 协议，于 2005 年左右发布，在它出现之前，常用的服务器 API 协议是 REST 和 SOAP 。</p>
+        </div>
+        <div class="article-readmore"><a href="/posts/grpc-go-a-working-demo/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/golang-channel-buffered-or-unbuffered/" class="article-titles">
+          <h2 class="article-title">go channel，buffered 与 unbuffered 的区别</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>August 19, 2019</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/go/">
+              <i class="fas fa-folder"></i>
+              go
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p>go 通过 goroutine 实现并发，而不同的 goroutine 之间需要通过 channel 来通讯，否则就是两段各行其是的代码。</p>
+        </div>
+        <div class="article-readmore"><a href="/posts/golang-channel-buffered-or-unbuffered/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/redis-usage-and-its-datatype/" class="article-titles">
+          <h2 class="article-title">redis 的使用场景及其数据类型</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>August 9, 2019</time></li>
+        </ul>
+        <div class="article-content">
+          <p>redis 的使用场景总结有以下几种：</p>
+<ul>
+<li>缓存/数据存储。涉及大部分 redis 的数据类型， string，Hash ，Zset ，set 等</li>
+<li>队列。利用 list 类型的 push pop 操作。</li>
+<li>事件通知。利用 publish/subscribe 消息系统</li>
+</ul>
+        </div>
+        <div class="article-readmore"><a href="/posts/redis-usage-and-its-datatype/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+    </section>
+    
+<ul class="pagination">
+  <li class="page-item">
+    <a href="/posts/" class="page-link" aria-label="First"><span aria-hidden="true">&laquo;&laquo;</span></a>
+  </li>
+  <li class="page-item disabled">
+    <a  class="page-link" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+  </li>
+  <li class="page-item active">
+    <a class="page-link" href="/posts/">1</a>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/posts/page/2/">2</a>
+  </li>
+  <li class="page-item">
+    <a href="/posts/page/2/" class="page-link" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a href="/posts/page/2/" class="page-link" aria-label="Last"><span aria-hidden="true">&raquo;&raquo;</span></a>
+  </li>
+</ul>
+
+
+  </div>
+
+
+
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-rsslink">
+      <a href="/posts/index.xml" type="application/rss+xml" target="_blank" title="RSS">
+        <i class="fas fa-rss"></i>
+      </a>
+    </li>
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+</body>
+</html>

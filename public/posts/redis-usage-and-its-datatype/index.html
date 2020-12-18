@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>redis 的使用场景及其数据类型 - 编程札记 Programming Notes</title>
+  <meta property="og:title" content="redis 的使用场景及其数据类型 - 编程札记 Programming Notes" />
+  <meta name="twitter:title" content="redis 的使用场景及其数据类型 - 编程札记 Programming Notes" />
+  <meta name="description" content="redis 的使用场景总结有以下几种：
+
+缓存/数据存储。涉及大部分 redis 的数据类型， string，Hash ，Zset ，set 等
+队列。利用 list 类型的 push pop 操作。
+事件通知。利用 publish/subscribe 消息系统
+">
+  <meta property="og:description" content="redis 的使用场景总结有以下几种：
+
+缓存/数据存储。涉及大部分 redis 的数据类型， string，Hash ，Zset ，set 等
+队列。利用 list 类型的 push pop 操作。
+事件通知。利用 publish/subscribe 消息系统
+">
+  <meta name="twitter:description" content="redis 的使用场景总结有以下几种：
+
+缓存/数据存储。涉及大部分 redis 的数据类型， string，Hash ，Zset ，set 等
+队列。利用 list 类型的 push pop 操作。
+事件通知。利用 publish/subscribe 消息系统
+">
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/posts/redis-usage-and-its-datatype/" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+
+<body>
+    
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-tags"><a href="/tags/" title="Tags">Tags</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+    
+  <div class="main" role="main">
+    <article class="article">
+      
+      
+      <h1 class="article-title">redis 的使用场景及其数据类型</h1>
+      
+      <hr class="article-title-bottom">
+      <ul class="article-meta">
+        <li class="article-meta-date"><time>August 9, 2019</time></li>
+      </ul>
+      
+      <p>redis 的使用场景总结有以下几种：</p>
+<ul>
+<li>缓存/数据存储。涉及大部分 redis 的数据类型， string，Hash ，Zset ，set 等</li>
+<li>队列。利用 list 类型的 push pop 操作。</li>
+<li>事件通知。利用 publish/subscribe 消息系统</li>
+</ul>
+<h2 id="1-缓存数据存储">1. 缓存/数据存储</h2>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<ul>
+<li>
+<p>主要应对大量读取请求、保存临时数据的等场景</p>
+<ul>
+<li>保存临时数据场景：保存用户的session，把通过验证的用户数据存到 redis，设置好时效，然后返回 ssesionId 给前端。</li>
+<li>保存可复用的数据，某些请求频繁的数据，存到 redis 可提高响应速度，减少服务器压力。</li>
+</ul>
+</li>
+<li>
+<h3 id="string-类型的应用">string 类型的应用</h3>
+<ul>
+<li>
+<p>redis 最常见简单的操作就是以 string 类型保存数据。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">redis&gt; SET userId:10001 <span class="s2">&#34;jack&#34;</span> <span class="c1">#写入</span>
+<span class="s2">&#34;OK&#34;</span>
+redis&gt; GET  userId:10001 <span class="c1">#读取</span>
+<span class="s2">&#34;jack&#34;</span>
+redis&gt; EXPIRE  userId:10001 <span class="m">100</span>  <span class="c1"># 100秒后过期</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code>
+</code></pre></li>
+<li>
+<p>redis 的 key不建议太短，词和词自己通常用 : - . 来分割，例如：<code>comment:1234:reply-to</code>.</p>
+</li>
+</ul>
+</li>
+<li>
+<h3 id="hash-类型">hash 类型</h3>
+<ul>
+<li>
+<p>Hash 类型是可以以键值对（object，map）的格式保存和读取数据：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="c1"># command key field-1 value-1 field-2 value-2</span>
+&gt; hmset user:1000 username antirez birthyear <span class="m">1977</span> verified <span class="m">1</span>
+OK
+</code></pre></td></tr></table>
+</div>
+</div><pre><code></code></pre></li>
+</ul>
+</li>
+<li>
+<h3 id="hash-vs-string">hash VS string</h3>
+<ul>
+<li>
+<p>键值对数据可以用 hash 保存；也可以转换成 json 格式，以 string 类型保存:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">&gt; SET user:1000 <span class="s1">&#39;{&#34;username&#34;:&#34;antirez&#34;,&#34;birthyear&#34;: 1977}&#39;</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code></code></pre></li>
+<li>
+<p>如果数据的大部分操作是整存整取的话，以 string 保存 json 更好。</p>
+</li>
+<li>
+<p>如果大部分操作是零存零取，hash 会更好，因为 hash 可以指定读取某个 field 的值：</p>
+<pre><code>&gt; hget user:1000 birthyear
+&quot;1977&quot;
+</code></pre><pre><code>
+</code></pre></li>
+<li>
+<p>大多数时候，尤其 field 不是非常多的情况，<strong>这两种方法区别不大</strong>，因为 json 的解码和编码过程很快。</p>
+</li>
+</ul>
+</li>
+<li>
+<h3 id="sets--sorted-set">sets &amp; sorted set</h3>
+<ul>
+<li>
+<p>sets 类型是唯一、无排序的 string 的合集。</p>
+</li>
+<li>
+<p>sorted sets 和 set 相似，唯一区别是里面有元素有个有一个数值，并按分数排序，示例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="c1"># command key value-score value</span>
+&gt; zadd hackers <span class="m">1940</span> <span class="s2">&#34;Alan Kay&#34;</span>
+<span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+&gt; zadd hackers <span class="m">1957</span> <span class="s2">&#34;Sophie Wilson&#34;</span>
+&gt; <span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+&gt; zadd hackers <span class="m">1914</span> <span class="s2">&#34;Hedy Lamarr&#34;</span>
+<span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code>
+ 读取时，可以按顺序取出数据：
+       
+</code></pre><pre><code> &gt; zrange hackers 0 1
+ 1) &quot;Alan Turing&quot;
+ 2) &quot;Hedy Lamarr&quot;
+</code></pre><pre><code>
+</code></pre></li>
+<li>
+<p>ZSET 适合需要对数据进行<strong>频繁排序、筛选的场景</strong> 。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-队列-与-list-类型">2. 队列 与 List 类型</h2>
+<ul>
+<li>
+<p>list 类型以 Linked List 实现。优点：从头部或尾部插入数据事件复杂度是 O(N); 缺点是；从中间插入数据不快。 如果需要大量插入数据到中间，应该使用 SET 类型</p>
+</li>
+<li>
+<p>一个典型的应用场景，网站首页展示用户们最新发布的 10 条推特，</p>
+<ul>
+<li>每当有用户发推时，<code>LPUSH</code> 消息 id 到 list</li>
+<li>有人访问网站首页时， <code>LRANGE 0 9</code> 获取最新 10条更新</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-事件通知publishsubscribe-消息系统">3. 事件通知，publish/subscribe 消息系统</h2>
+<ul>
+<li>
+<p>“<a href="https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern">publish/subscribe</a>”消息模式</p>
+<ul>
+<li>发布者不直接把消息发给接收方，也不需要知道接收方都是谁，它只要把消息发送到一个类（class，channel）即完成任务。同样的，而相信接收方即订阅者，只需要关心它订阅了哪些 channel，并从这些类获取消息，不需要知道消除是谁发送的。</li>
+</ul>
+</li>
+<li>
+<p>redis 的 publish/subscribe 消息模式</p>
+<ul>
+<li>
+<p>在客户端 client_1 订阅 channel ：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="c1"># client_1</span>
+<span class="c1"># 订阅 channel 名为 example</span>
+&gt; SUBSCRIBE example
+Reading messages... <span class="o">(</span>press Ctrl-C to quit<span class="o">)</span>
+1<span class="o">)</span> <span class="s2">&#34;subscribe&#34;</span>
+2<span class="o">)</span> <span class="s2">&#34;example&#34;</span>
+3<span class="o">)</span> <span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code></code></pre></li>
+<li>
+<p>然后该客户端将一直监听新的通知。此时如果 client_2 发布消息：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="c1"># client_2</span>
+PUBLISH example <span class="m">2</span>
+<span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code></code></pre></li>
+<li>
+<p>client_1 将弹出新消息：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="c1"># client_1</span>
+<span class="c1">#...</span>
+1<span class="o">)</span> <span class="s2">&#34;message&#34;</span>
+2<span class="o">)</span> <span class="s2">&#34;example&#34;</span>
+3<span class="o">)</span> <span class="s2">&#34;2&#34;</span>
+</code></pre></td></tr></table>
+</div>
+</div><pre><code>
+</code></pre></li>
+</ul>
+</li>
+</ul>
+<h2 id="4-hyperloglog-类型统计合集总数">4. HyperLogLog 类型，统计合集总数</h2>
+<ul>
+<li>HyperLogLog 数据类型用于统计集合总数的数据类型。相比传统的计数方式，它使用独特的算法去计数，只需占用很小的内存。</li>
+<li>缺点：hyperloglog的数目是估算出来的，而且有 1% 情况会报错。</li>
+<li>适用于统计某些大量的数据。例如，你建了一个爬虫，需要记录某天爬取的多少网站，可以这样操作:</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">	<span class="c1"># 记录</span>
+	&gt; PFADD crawled:20171124 <span class="s2">&#34;http://www.google.com/&#34;</span>
+	<span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+	&gt; PFADD crawled:20171124 <span class="s2">&#34;http://www.redislabs.com/&#34;</span>
+	<span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+	&gt; PFADD crawled:20171124 <span class="s2">&#34;http://www.redis.io/&#34;</span>
+	<span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+	&gt; PFADD crawled:20171125 <span class="s2">&#34;http://www.redisearch.io/&#34;</span>
+	<span class="o">(</span>integer<span class="o">)</span> <span class="m">1</span>
+	....
+	
+</code></pre></td></tr></table>
+</div>
+</div><pre><code>	# 统计总数
+	&gt; PFCOUNT crawled:20171124
+	(integer) 3
+</code></pre><h2 id="5-待补充">5. 待补充：</h2>
+<ul>
+<li><a href="https://redis.io/topics/streams-intro">Introduction to Redis Streams</a></li>
+<li><a href="https://stackoverflow.com/questions/43777807/publish-subscribe-reliable-messaging-redis-vs-rabbitmq">redis as message borker VS rabbitmq</a></li>
+</ul>
+<h3 id="主要参考">主要参考：</h3>
+<ul>
+<li><a href="https://redis.io/topics/data-types-intro">An introduction to Redis data types and abstractions</a></li>
+<li><a href="https://redislabs.com/redis-best-practices/counting/hyperloglog">HyperLogLog</a></li>
+<li><a href="https://thoughtbot.com/blog/hyperloglogs-in-redis">HyperLogLog in redis</a></li>
+<li><a href="https://stackoverflow.com/a/18991212/5561328">stackoverflow： hash vs JSON string</a></li>
+<li><a href="https://www.quora.com/What-is-the-usage-of-Redis-pub-sub">quora: usage-of-Redis-pub-sub</a></li>
+</ul>
+    </article>
+
+    
+
+
+    <ul class="pager article-pager">
+      <li class="pager-newer">
+          <a href="/posts/golang-channel-buffered-or-unbuffered/" data-toggle="tooltip" data-placement="top" title="go channel，buffered 与 unbuffered 的区别">&lt; Newer</a>
+      </li>
+      <li class="pager-older">
+        <a href="/posts/2019-07-28-password-hashing-md/" data-toggle="tooltip" data-placement="top" title="密码哈希(Password Hashing)">Older &gt;</a>
+      </li>
+    </ul>
+  </div>
+
+    
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+    
+</body>
+
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Go Error 的设计哲学 - 编程札记 Programming Notes</title>
+  <meta property="og:title" content="Go Error 的设计哲学 - 编程札记 Programming Notes" />
+  <meta name="twitter:title" content="Go Error 的设计哲学 - 编程札记 Programming Notes" />
+  <meta name="description" content="最近阅读了不少关于 Go 错误处理的材料和讨论，总结出 Go Error 的设计哲学主要有两点：
+
+处理所有潜在的错误
+Errors Are Value
+
+Go 对错误处理的最初设计和后续优化方案，以及编程过程中处理错误的各种方法，基本都是围绕着这些理念展开的。">
+  <meta property="og:description" content="最近阅读了不少关于 Go 错误处理的材料和讨论，总结出 Go Error 的设计哲学主要有两点：
+
+处理所有潜在的错误
+Errors Are Value
+
+Go 对错误处理的最初设计和后续优化方案，以及编程过程中处理错误的各种方法，基本都是围绕着这些理念展开的。">
+  <meta name="twitter:description" content="最近阅读了不少关于 Go 错误处理的材料和讨论，总结出 Go Error 的设计哲学主要有两点：
+
+处理所有潜在的错误
+Errors Are Value
+
+Go 对错误处理的最初设计和后续优化方案，以及编程过程中处理错误的各种方法，基本都是围绕着这些理念展开的。">
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/posts/the-philosophy-of-go-error-handling/" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+
+<body>
+    
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-tags"><a href="/tags/" title="Tags">Tags</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+    
+  <div class="main" role="main">
+    <article class="article">
+      
+      
+      <h1 class="article-title">Go Error 的设计哲学</h1>
+      
+      <hr class="article-title-bottom">
+      <ul class="article-meta">
+        <li class="article-meta-date"><time>December 5, 2020</time></li>
+        <li class="article-meta-categories">
+          <a href="/categories/go/">
+            <i class="fas fa-folder"></i>
+            go
+          </a>&nbsp;
+        </li>
+      </ul>
+      
+<aside class="toc">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-处理所有潜在的错误">1 处理所有潜在的错误</a></li>
+    <li><a href="#2-errors-are-values">2 Errors Are Values</a></li>
+    <li><a href="#参考资料">参考资料</a></li>
+  </ul>
+</nav>
+</aside>
+      <p>最近阅读了不少关于 Go 错误处理的材料和讨论，总结出 Go Error 的设计哲学主要有两点：</p>
+<ul>
+<li>处理所有潜在的错误</li>
+<li>Errors Are Value</li>
+</ul>
+<p>Go 对错误处理的最初设计和后续优化方案，以及编程过程中处理错误的各种方法，基本都是围绕着这些理念展开的。</p>
+<h2 id="1-处理所有潜在的错误">1 处理所有潜在的错误</h2>
+<p>Go 从最初设计起就确定了一个原则：程序中的所有潜在的错误都必须被明确地处理。为什么要这么做？可以先看下面一段代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">CopyFile</span><span class="p">(</span><span class="nx">src</span><span class="p">,</span> <span class="nx">dst</span> <span class="kt">string</span><span class="p">)</span> <span class="nx">throws</span> <span class="kt">error</span> <span class="p">{</span>
+	<span class="nx">r</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Open</span><span class="p">(</span><span class="nx">src</span><span class="p">)</span>
+	<span class="k">defer</span> <span class="nx">r</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+
+	<span class="nx">w</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="nx">dst</span><span class="p">)</span>
+	<span class="nx">io</span><span class="p">.</span><span class="nf">Copy</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">r</span><span class="p">)</span>
+	<span class="nx">w</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在这段代码中， <code>os.Open</code>  <code>os.Create</code> <code>io.Copy</code>等函数都可能失败引发错误，当错误发生时会抛出错误 <code>throws error</code> ，但我们并不能直接知道具体哪个函数出错，并依此做出相应的处理（例如，当 <code>io.Copy</code> 出错时，我们需要删除了 <code>dst</code> 文件）。</p>
+<p>这种 <code>throws error</code>  这种处理方式，和很多其它编程语言里采用的 <code>try catch</code> 类似，都属于隐晦地处理错误的方法。而 Go 希望避免这种情况，它希望清楚地处理错误（error），而不是把它当作异常（exception） 。按照这个原则，代码应该如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">CopyFile</span><span class="p">(</span><span class="nx">src</span><span class="p">,</span> <span class="nx">dst</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+	<span class="nx">r</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Open</span><span class="p">(</span><span class="nx">src</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;copy %s %s: %v&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">dst</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">defer</span> <span class="nx">r</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+
+	<span class="nx">w</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="nx">dst</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;copy %s %s: %v&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">dst</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="k">if</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">io</span><span class="p">.</span><span class="nf">Copy</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">r</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+		<span class="nx">os</span><span class="p">.</span><span class="nf">Remove</span><span class="p">(</span><span class="nx">dst</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;copy %s %s: %v&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">dst</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">w</span><span class="p">.</span><span class="nf">Close</span><span class="p">();</span> <span class="nx">err</span> <span class="o">!=</span> <span class="nx">il</span> <span class="p">{</span>
+		<span class="nx">os</span><span class="p">.</span><span class="nf">Remove</span><span class="p">(</span><span class="nx">dst</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;copy %s %s: %v&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">dst</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这段代码基本上对潜在的错误都做了检查和处理，使程序更加健壮。</p>
+<p>Go 对错误处理经常会提到两句话：</p>
+<p>Allways  check your errors!</p>
+<p>Do not treat errors like exception</p>
+<p>其实就是在实践这一设计理念。</p>
+<p>不过，目前这种对错误的处理方法并不是完美的，代码中重复出现很多次 <code>if err != nil</code> ，可读性较差，这也是 Go 社区近年来试图解决的一个问题。</p>
+<p>Go2 的错误处理讨论草案曾提出引入  <code>check</code> /  <code>handle</code>  关键字，内置函数  <code>try()</code> 等新特性来避免重复的错误检查，因为担心这些方案不能带来显著的改善，目前还没有进一步的计划。</p>
+<h2 id="2-errors-are-values">2 Errors Are Values</h2>
+<p>&ldquo;Errors Are Values&rdquo;，是 Go  Error 设计的第二个哲学，它的主要内涵是 error 是可以被赋值，即通过代码来自定义 <code>error</code> 。</p>
+<p>在 Go 语言里，<code>error</code> 是一个接口类型，只要实现了 <code>Error()</code> 方法，就可以自定义一个错误结构，这是 Errors Are Values 的基础。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="kt">error</span> <span class="kd">interface</span> <span class="p">{</span>
+    <span class="nf">Error</span><span class="p">()</span> <span class="kt">string</span>
+<span class="p">}</span>
+
+<span class="c1">// errorString is a trivial implementation of error.
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">errorString</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">s</span> <span class="kt">string</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">errorString</span><span class="p">)</span> <span class="nf">Error</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">e</span><span class="p">.</span><span class="nx">s</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这样的设计，使得我们在处理错误时有很大的发挥空间。</p>
+<p>以上述备受争议 <code>if err != nil</code> 为例，虽然很多人诟病这个语句会在代码中出现太多次，可读性很差。但 Rob Pike 就认为，这在很多情况下是可以避免的，很多人只是简单地了解了 Go 处理错误的范式，没有更深入地去领会它，每次处理错误时就打上 <code>if err != nil</code> ，才会重复很多次这个语句。如果真正领会了 &ldquo;Errors Are Values&rdquo; 的含义，就可以通过代码来改变这一情况。</p>
+<p>以下面代码为例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">fd</span><span class="p">.</span><span class="nf">Write</span><span class="p">(</span><span class="nx">p0</span><span class="p">[</span><span class="nx">a</span><span class="p">:</span><span class="nx">b</span><span class="p">])</span>
+<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">err</span>
+<span class="p">}</span>
+<span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">fd</span><span class="p">.</span><span class="nf">Write</span><span class="p">(</span><span class="nx">p1</span><span class="p">[</span><span class="nx">c</span><span class="p">:</span><span class="nx">d</span><span class="p">])</span>
+<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">err</span>
+<span class="p">}</span>
+<span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">fd</span><span class="p">.</span><span class="nf">Write</span><span class="p">(</span><span class="nx">p2</span><span class="p">[</span><span class="nx">e</span><span class="p">:</span><span class="nx">f</span><span class="p">])</span>
+<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">err</span>
+<span class="p">}</span>
+<span class="c1">// and so on
+</span></code></pre></td></tr></table>
+</div>
+</div><p><code>if err != nil</code> 重复出现了多次，十分累赘，但我们可以根据这个场景自定义一个错误结构：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">errWriter</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">w</span>   <span class="nx">io</span><span class="p">.</span><span class="nx">Writer</span>
+    <span class="nx">err</span> <span class="kt">error</span>
+<span class="p">}</span>
+<span class="kd">func</span> <span class="p">(</span><span class="nx">ew</span> <span class="o">*</span><span class="nx">errWriter</span><span class="p">)</span> <span class="nf">write</span><span class="p">(</span><span class="nx">buf</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="nx">ew</span><span class="p">.</span><span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+        <span class="k">return</span>
+    <span class="p">}</span>
+    <span class="nx">_</span><span class="p">,</span> <span class="nx">ew</span><span class="p">.</span><span class="nx">err</span> <span class="p">=</span> <span class="nx">ew</span><span class="p">.</span><span class="nx">w</span><span class="p">.</span><span class="nf">Write</span><span class="p">(</span><span class="nx">buf</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>上述的代码就可以改成：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">var</span> <span class="nx">err</span> <span class="kt">error</span>
+<span class="nx">write</span> <span class="o">:=</span> <span class="kd">func</span><span class="p">(</span><span class="nx">buf</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+        <span class="k">return</span>
+    <span class="p">}</span>
+    <span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">w</span><span class="p">.</span><span class="nf">Write</span><span class="p">(</span><span class="nx">buf</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="nf">write</span><span class="p">(</span><span class="nx">p0</span><span class="p">[</span><span class="nx">a</span><span class="p">:</span><span class="nx">b</span><span class="p">])</span>
+<span class="nf">write</span><span class="p">(</span><span class="nx">p1</span><span class="p">[</span><span class="nx">c</span><span class="p">:</span><span class="nx">d</span><span class="p">])</span>
+<span class="nf">write</span><span class="p">(</span><span class="nx">p2</span><span class="p">[</span><span class="nx">e</span><span class="p">:</span><span class="nx">f</span><span class="p">])</span>
+<span class="c1">// and so on
+</span><span class="c1"></span><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">err</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>经过调整后的代码更加整洁，同时也能清楚地处理错误。这种处理错误的方式，在官方标准库中也有不少应用，例如 bufio 的 <a href="https://golang.org/src/bufio/bufio.go?s=14996:15065#L548">Write</a> 就使用了类似方法。Go 官方博客介绍错误处理的<a href="https://blog.golang.org/error-handling-and-go">文章</a> 里，“Simplifying repetitive error handling“ 一节也介绍相似的处理方法。</p>
+<p>Rob Pike 也强调，这种对错误的处理方式并非唯一的对策，Errors Are Values 的设计，给我们带来了更多可能性。</p>
+<p>可以预见，未来 Go 对错误的更新迭代，仍然离不开这两点设计哲学。假如 Go 的错误处理未来不能变得足够好，那也可能跟这两点设计哲学。</p>
+<h2 id="参考资料">参考资料</h2>
+<p>【 <a href="https://blog.golang.org/error-handling-and-go">Error handling and Go</a>  】Go 错误的基础知识和使用介绍</p>
+<p>【<a href="https://blog.golang.org/go1.13-errors">Working with Errors in Go 1.13</a> 】Go 1.13 带来的新特性 <code>Uwarp</code> ， <code>errors.Is</code> ，<code>errors.As</code></p>
+<p>【<a href="https://blog.golang.org/errors-are-values">errors-are-values</a>】 Rob Pike 介绍 errors are values 的应用</p>
+<p>【<a href="https://go.googlesource.com/proposal/+/master/design/go2draft-error-handling-overview.md">error handling problem overview</a>】Russ Cox 总结错误处理存在的问题</p>
+<p>【<a href="https://blog.golang.org/experiment#Errors">https://blog.golang.org/experiment#Errors</a>】 Russ Cox 介绍错误处理的改进进展</p>
+<p>【<a href="https://github.com/golang/go/issues/32437">Proposal: A built-in Go error check function, &ldquo;try&rdquo;</a>】&ldquo;try&rdquo; 提案讨论</p>
+<p>【<a href="https://go.googlesource.com/proposal/+/master/design/go2draft.md">Go 2 Draft Designs</a>】Go 2 设计草案，关于错误部分占了不少，有的已经应用到 Go 1.13</p>
+    </article>
+
+    
+
+
+    <ul class="pager article-pager">
+      <li class="pager-newer pager-noitem">&lt; Newer</li>
+      <li class="pager-older">
+        <a href="/posts/unix-io-introduction/" data-toggle="tooltip" data-placement="top" title="Unix I/O 主要模型介绍">Older &gt;</a>
+      </li>
+    </ul>
+  </div>
+
+    
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+    
+</body>
+
+</html>

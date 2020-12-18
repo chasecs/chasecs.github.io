@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Go 网络编程的实现 - 编程札记 Programming Notes</title>
+  <meta property="og:title" content="Go 网络编程的实现 - 编程札记 Programming Notes" />
+  <meta name="twitter:title" content="Go 网络编程的实现 - 编程札记 Programming Notes" />
+  <meta name="description" content="提要：
+
+TCP 服务端、客户端示例
+Network system calls
+TCP 编程是如何实现的
+
+Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, domain name resolution, Unix domain sockets 等连接，此外，还通过 net/http ，net/rpc 等提供了 http，rpc 等主流应用层的连接协议。">
+  <meta property="og:description" content="提要：
+
+TCP 服务端、客户端示例
+Network system calls
+TCP 编程是如何实现的
+
+Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, domain name resolution, Unix domain sockets 等连接，此外，还通过 net/http ，net/rpc 等提供了 http，rpc 等主流应用层的连接协议。">
+  <meta name="twitter:description" content="提要：
+
+TCP 服务端、客户端示例
+Network system calls
+TCP 编程是如何实现的
+
+Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, domain name resolution, Unix domain sockets 等连接，此外，还通过 net/http ，net/rpc 等提供了 http，rpc 等主流应用层的连接协议。">
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/posts/golang-network-programming-implementation/" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+
+<body>
+    
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-tags"><a href="/tags/" title="Tags">Tags</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+    
+  <div class="main" role="main">
+    <article class="article">
+      
+      
+      <h1 class="article-title">Go 网络编程的实现</h1>
+      
+      <hr class="article-title-bottom">
+      <ul class="article-meta">
+        <li class="article-meta-date"><time>July 22, 2020</time></li>
+        <li class="article-meta-categories">
+          <a href="/categories/go/">
+            <i class="fas fa-folder"></i>
+            go
+          </a>&nbsp;
+        </li>
+      </ul>
+      
+<aside class="toc">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#31--核心方法">3.1  核心方法</a>
+      <ul>
+        <li><a href="#311-context-处理">3.1.1 context 处理</a></li>
+        <li><a href="#312-网络和地址解析-dresolverresolveaddrlist">3.1.2 网络和地址解析， <code>d.resolver().resolveAddrList(.....)</code></a></li>
+        <li><a href="#313-sysdialer-拨号连接">3.1.3 sysDialer ，拨号连接</a></li>
+      </ul>
+    </li>
+    <li><a href="#32-小结">3.2 小结</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#41-服务端和客户端创建连接">4.1 服务端和客户端创建连接</a></li>
+    <li><a href="#42-读写数据">4.2 读写数据</a></li>
+  </ul>
+</nav>
+</aside>
+      <p>提要：</p>
+<ul>
+<li>TCP 服务端、客户端示例</li>
+<li>Network system calls</li>
+<li>TCP 编程是如何实现的</li>
+</ul>
+<p>Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, domain name resolution, Unix domain sockets 等连接，此外，还通过 net/http ，net/rpc 等提供了 http，rpc 等主流应用层的连接协议。</p>
+<h1 id="1-tcp-服务示例">1 TCP 服务示例</h1>
+<p>TCP 是最常用的网络连接方式，以 TCP 连接为例，一个简单的 TCP 连接代码示例：</p>
+<p>TCP Client</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">conn</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nf">Dial</span><span class="p">(</span><span class="s">&#34;tcp&#34;</span><span class="p">,</span> <span class="s">&#34;golang.org:80&#34;</span><span class="p">)</span>
+<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+	<span class="c1">// handle error
+</span><span class="c1"></span><span class="p">}</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nf">Fprintf</span><span class="p">(</span><span class="nx">conn</span><span class="p">,</span> <span class="s">&#34;GET / HTTP/1.0\r\n\r\n&#34;</span><span class="p">)</span>
+<span class="nx">status</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">bufio</span><span class="p">.</span><span class="nf">NewReader</span><span class="p">(</span><span class="nx">conn</span><span class="p">).</span><span class="nf">ReadString</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">)</span>
+<span class="c1">// ...D
+</span></code></pre></td></tr></table>
+</div>
+</div><p>TCP server</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ln</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nf">Listen</span><span class="p">(</span><span class="s">&#34;tcp&#34;</span><span class="p">,</span> <span class="s">&#34;:8080&#34;</span><span class="p">)</span>
+<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+	<span class="c1">// handle error
+</span><span class="c1"></span><span class="p">}</span>
+<span class="k">for</span> <span class="p">{</span>
+	<span class="nx">conn</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ln</span><span class="p">.</span><span class="nf">Accept</span><span class="p">()</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="c1">// handle error
+</span><span class="c1"></span>	<span class="p">}</span>
+	<span class="k">go</span> <span class="nf">handleConnection</span><span class="p">(</span><span class="nx">conn</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>那么 net 包背后是如何实现 tcp 连接的？</p>
+<h1 id="2-tcp-连接在系统调用层面的实现">2. TCP 连接在系统调用层面的实现</h1>
+<p>包括 TCP/IP 在内的各种网络连接，在类 unix 的操作系统里，都是通过网络系统调用（network system calls） 实现的，相关系统调用接口主要有：</p>
+<p><code>socket()</code>，<code>bind()</code>， <code>listen()</code>， <code>accept()</code>，<code>send()</code></p>
+<p>使用系统调用创建 TCP 服务器的核心流程是：</p>
+<ul>
+<li>创建 socket 连接 <code>sockfd = socket(AF_INET, SOCK_STREAM, 0);</code></li>
+<li>绑定 地址   <code>bind(sockfd, (struct sockaddr *) &amp;serv_addr, sizeof(serv_addr));</code></li>
+<li>启动监听 <code>listen(sockfd,5);</code></li>
+<li>接收客户端的连接 <code>newsockfd = accept(sockfd, (struct sockaddr *)&amp;cli_addr, &amp;clilen);</code></li>
+<li>接收数据 <code>n = read( newsockfd,buffer,255 );</code></li>
+<li>发送数据，<code>n = write(newsockfd,&quot;I got your message&quot;,18);</code></li>
+</ul>
+<p>创建 TCP 客户端的核心流程：</p>
+<ul>
+<li>创建 socket 连接 <code>sockfd = socket(AF_INET, SOCK_STREAM, 0);</code></li>
+<li>连接服务器地址：<code>connect(sockfd, (struct sockaddr*)&amp;serv_addr, sizeof(serv_addr))</code></li>
+<li>接收数据 <code>n = read( newsockfd,buffer,255 );</code></li>
+<li>发送数据，<code>n = write(newsockfd,&quot;I got your message&quot;,18);</code></li>
+</ul>
+<p><code>socket()</code> 等系统调用的实现，是 kernel 层面完成的。</p>
+<p>对于 net 包而言，包括 TCP 在内网络连接，底层上是通过这些系统调用实现的，它的任务则是对这个工作流程做了封装。</p>
+<h1 id="3-golang-tcp-连接的实现">3. Golang TCP 连接的实现</h1>
+<ul>
+<li>go 在调用 syscall 之前，做了什么工作</li>
+<li>这些工作有什么必要性？</li>
+</ul>
+<h2 id="31--核心方法">3.1  核心方法</h2>
+<p>以客户端连接为例，<code>conn, err := net.Dial(&quot;tcp&quot;, &quot;golang.org:80&quot;)</code>  的核心实现方法是 dial.go 的</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">d</span> <span class="o">*</span><span class="nx">Dialer</span><span class="p">)</span> <span class="nf">DialContext</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">network</span><span class="p">,</span> <span class="nx">address</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="nx">Conn</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这个方法的主要功能是：</p>
+<h3 id="311-context-处理">3.1.1 context 处理</h3>
+<h3 id="312-网络和地址解析-dresolverresolveaddrlist">3.1.2 网络和地址解析， <code>d.resolver().resolveAddrList(.....)</code></h3>
+<ul>
+<li>解析 network 类型；unix socket, tcp, udp 等，通过 <code>parseNetwork(...)</code></li>
+<li>解析 address ，IP 或者 hostname ，<code>r.internetAddrList(ctx, afnet, addr)</code>
+<ul>
+<li><code>r.lookupIPAddr(ctx, net, host)</code>，先解析 IP，或者 DNS 解析 ，<code>r.lookupIPAddr(...)</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="313-sysdialer-拨号连接">3.1.3 sysDialer ，拨号连接</h3>
+<p>连接的两种方式：</p>
+<ul>
+<li><code>sd.dialParallel(ctx, primaries, fallbacks)</code></li>
+<li><code>sd.dialSerial(ctx, primaries)</code></li>
+</ul>
+<p><code>sd.dialSingle(dialCtx, ra)</code> 支持四种类型：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">sd</span><span class="p">.</span><span class="nf">dialTCP</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">la</span><span class="p">,</span> <span class="nx">ra</span><span class="p">)</span>
+
+<span class="nx">sd</span><span class="p">.</span><span class="nf">dialUDP</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">la</span><span class="p">,</span> <span class="nx">ra</span><span class="p">)</span>
+
+<span class="nx">sd</span><span class="p">.</span><span class="nf">dialIP</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">la</span><span class="p">,</span> <span class="nx">ra</span><span class="p">)</span>
+
+<span class="nx">sd</span><span class="p">.</span><span class="nf">dialUnix</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">la</span><span class="p">,</span> <span class="nx">ra</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>以 TCP 为例：</p>
+<p><code>sd.dialTCP(ctx, la, ra)</code>  以及  <code>sl.listenTCP(ctx, la)</code>  的下层实现都可以追溯到 sock_posix.go 的</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">socket</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">net</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">family</span><span class="p">,</span> <span class="nx">sotype</span><span class="p">,</span> <span class="nx">proto</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">ipv6only</span> <span class="kt">bool</span><span class="p">,</span> <span class="nx">laddr</span><span class="p">,</span> <span class="nx">raddr</span> <span class="nx">sockaddr</span><span class="p">,</span> <span class="nx">ctrlFn</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">RawConn</span><span class="p">)</span> <span class="kt">error</span><span class="p">)</span> <span class="p">(</span><span class="nx">fd</span> <span class="o">*</span><span class="nx">netFD</span><span class="p">,</span> <span class="nx">err</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>即实现系统调用<code>socket()</code> 。</p>
+<p>如果是服务端，调用 <code>fd.listenStream(laddr, listenerBacklog(), ctrlFn)</code></p>
+<ul>
+<li>实现 <code>bind()</code> ： <code>syscall.Bind(fd.pfd.Sysfd, lsa)</code></li>
+<li>实现 <code>listen()</code> : <code>listenFunc(fd.pfd.Sysfd, backlog)</code></li>
+</ul>
+<p>如果是客户端，调用 <code>fd.dial(ctx, laddr, raddr, ctrlFn)</code></p>
+<ul>
+<li>实现 <code>connect()</code> : <code>fd.connect(ctx, lsa, rsa)</code></li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="k">if</span> <span class="n">laddr</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="n">lsa</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">laddr</span><span class="p">.</span><span class="n">sockaddr</span><span class="p">(</span><span class="n">fd</span><span class="p">.</span><span class="n">family</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">err</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="n">lsa</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="n">err</span> <span class="o">=</span> <span class="n">syscall</span><span class="p">.</span><span class="n">Bind</span><span class="p">(</span><span class="n">fd</span><span class="p">.</span><span class="n">pfd</span><span class="p">.</span><span class="n">Sysfd</span><span class="p">,</span> <span class="n">lsa</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
+				<span class="k">return</span> <span class="n">os</span><span class="p">.</span><span class="n">NewSyscallError</span><span class="p">(</span><span class="s">&#34;bind&#34;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="n">var</span> <span class="n">rsa</span> <span class="n">syscall</span><span class="p">.</span><span class="n">Sockaddr</span>  <span class="c1">// remote address from the user
+</span><span class="c1"></span>	<span class="n">var</span> <span class="n">crsa</span> <span class="n">syscall</span><span class="p">.</span><span class="n">Sockaddr</span> <span class="c1">// remote address we actually connected to
+</span><span class="c1"></span>	<span class="k">if</span> <span class="n">raddr</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="n">rsa</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">raddr</span><span class="p">.</span><span class="n">sockaddr</span><span class="p">(</span><span class="n">fd</span><span class="p">.</span><span class="n">family</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">err</span>
+		<span class="p">}</span>
+		<span class="k">if</span> <span class="n">crsa</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">fd</span><span class="p">.</span><span class="n">connect</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">lsa</span><span class="p">,</span> <span class="n">rsa</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">err</span>
+		<span class="p">}</span>
+		<span class="n">fd</span><span class="p">.</span><span class="n">isConnected</span> <span class="o">=</span> <span class="nb">true</span>
+	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="nl">err</span> <span class="p">:</span><span class="o">=</span> <span class="n">fd</span><span class="p">.</span><span class="n">init</span><span class="p">();</span> <span class="n">err</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">err</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="32-小结">3.2 小结</h2>
+<p>net 在调用syscall 之前，主要是增加 context 控制，封装 udp，tcp, uninx domain socket  等不同的连接类型，DNS 查找等，同时在有需要的地方引入 goroutine 提高处理效率。</p>
+<p><em>问题：</em></p>
+<p><em>proxy 是如何实现的</em></p>
+<p><em>TCP 如何保持长连接</em></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"> <span class="o">*</span><span class="kt">int</span> <span class="nf">setsockopt</span><span class="p">(</span><span class="kt">int</span> <span class="n">sockfd</span><span class="p">,</span> <span class="kt">int</span> <span class="n">level</span><span class="p">,</span> <span class="kt">int</span> <span class="n">optname</span><span class="p">,</span><span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">optval</span><span class="p">,</span> <span class="n">socklen_t</span> <span class="n">optlen</span><span class="p">);</span><span class="o">*</span>
+</code></pre></td></tr></table>
+</div>
+</div><h1 id="4-tcp-数据发送与接收">4 TCP 数据发送与接收</h1>
+<h2 id="41-服务端和客户端创建连接">4.1 服务端和客户端创建连接</h2>
+<p>TCP 连接建立后，如果是服务端，每当有客户端发来请求时，会建立新的连接。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">conn</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ln</span><span class="p">.</span><span class="nf">Accept</span><span class="p">()</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这个方法的下层实现是，tcpsock.go</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">l</span> <span class="o">*</span><span class="nx">TCPListener</span><span class="p">)</span> <span class="nf">Accept</span><span class="p">()</span> <span class="p">(</span><span class="nx">Conn</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>最终可以追溯到 fd_unix.go</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">fd</span> <span class="o">*</span><span class="nx">FD</span><span class="p">)</span> <span class="nf">Accept</span><span class="p">()</span> <span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">Sockaddr</span><span class="p">,</span> <span class="kt">string</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> 
+</code></pre></td></tr></table>
+</div>
+</div><p>而最底层的实现则是系统调用：hook_unix.go， <code>syscall.Accept</code></p>
+<h2 id="42-读写数据">4.2 读写数据</h2>
+<p>在 unix 的设计哲学里，everything is a file，延伸到网络连接设计，发送和接收数据对应也就是写入数据和读取数据。</p>
+<p>网络连接建立后的  <code>Conn</code>  类型，其实也是一个文件描述符（file discreptor），故发送数据就是向 conn 写入数据</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">fmt</span><span class="p">.</span><span class="nf">Fprintf</span><span class="p">(</span><span class="nx">conn</span><span class="p">,</span> <span class="s">&#34;GET / HTTP/1.0\r\n\r\n&#34;</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>接收数据即是从 <code>conn</code> 读取数据</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">status</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">bufio</span><span class="p">.</span><span class="nf">NewReader</span><span class="p">(</span><span class="nx">conn</span><span class="p">).</span><span class="nf">ReadString</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h1 id="5-http-的实现">5 Http 的实现</h1>
+<p>go http 连接就是先实现 http 协议，然后再调用上述的 TCP 连接。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">var</span> <span class="nx">DefaultTransport</span> <span class="nx">RoundTripper</span> <span class="p">=</span> <span class="o">&amp;</span><span class="nx">Transport</span><span class="p">{</span>
+	<span class="nx">Proxy</span><span class="p">:</span> <span class="nx">ProxyFromEnvironment</span><span class="p">,</span>
+	<span class="nx">DialContext</span><span class="p">:</span> <span class="p">(</span><span class="o">&amp;</span><span class="nx">net</span><span class="p">.</span><span class="nx">Dialer</span><span class="p">{</span>
+		<span class="nx">Timeout</span><span class="p">:</span>   <span class="mi">30</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span>
+		<span class="nx">KeepAlive</span><span class="p">:</span> <span class="mi">30</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span>
+		<span class="nx">DualStack</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+	<span class="p">}).</span><span class="nx">DialContext</span><span class="p">,</span>
+	<span class="nx">ForceAttemptHTTP2</span><span class="p">:</span>     <span class="kc">true</span><span class="p">,</span>
+	<span class="nx">MaxIdleConns</span><span class="p">:</span>          <span class="mi">100</span><span class="p">,</span>
+	<span class="nx">IdleConnTimeout</span><span class="p">:</span>       <span class="mi">90</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span>
+	<span class="nx">TLSHandshakeTimeout</span><span class="p">:</span>   <span class="mi">10</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span>
+	<span class="nx">ExpectContinueTimeout</span><span class="p">:</span> <span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>参考：</p>
+<p><a href="https://www.tutorialspoint.com/unix_sockets/socket_server_example.htm">https://www.tutorialspoint.com/unix_sockets/socket_server_example.htm</a></p>
+<p><a href="https://www.tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/">TCP Keepalive HOWTO</a></p>
+<p><a href="http://www.haifux.org/lectures/217/netLec5.pdf">http://www.haifux.org/lectures/217/netLec5.pdf</a></p>
+<p><a href="http://linasm.sourceforge.net/docs/syscalls/network.php">http://linasm.sourceforge.net/docs/syscalls/network.php</a></p>
+<p><a href="https://www.kernel.org/doc/html/latest/networking/rds.html#socket-interface">https://www.kernel.org/doc/html/latest/networking/rds.html#socket-interface</a></p>
+    </article>
+
+    
+
+
+    <ul class="pager article-pager">
+      <li class="pager-newer">
+          <a href="/posts/unix-io-introduction/" data-toggle="tooltip" data-placement="top" title="Unix I/O 主要模型介绍">&lt; Newer</a>
+      </li>
+      <li class="pager-older">
+        <a href="/posts/go-scheduler-introduction/" data-toggle="tooltip" data-placement="top" title="Go 源码分析：scheduler 工作流程">Older &gt;</a>
+      </li>
+    </ul>
+  </div>
+
+    
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+    
+</body>
+
+</html>

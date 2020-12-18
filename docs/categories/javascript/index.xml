@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>javascript on 编程札记 Programming Notes</title>
+    <link>https://example.com/categories/javascript/</link>
+    <description>Recent content in javascript on 编程札记 Programming Notes</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <copyright>&amp;copy; Copyright 2017 ttimehc@gmail.com</copyright>
+    <lastBuildDate>Sat, 07 Oct 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://example.com/categories/javascript/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>翻译：JavaScript Promises 实现原理详解（JavaScript Promises ... In Wicked Detail）</title>
+      <link>https://example.com/posts/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/</link>
+      <pubDate>Sat, 07 Oct 2017 00:00:00 +0000</pubDate>
+      
+      <guid>https://example.com/posts/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/</guid>
+      <description>&lt;blockquote&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;译按：&lt;/strong&gt;
+&lt;em&gt;Promise 是异步编程的一种解决方案，让 javascript 可以从杂乱回调函数中解脱出来。后来 ES6 标准把 Promise 纳入其中，原生提供了 Promise 对象。Promise 也成为 ES6 最主要的特性之一。&lt;/em&gt;&lt;br&gt;
+&lt;em&gt;网上介绍 promise 使用方法的文章很多，解释其原理却很少。这篇文章循序渐进地实现了一遍 promise，分析透彻，对了解 promise 的工作原理很有帮助。为了加深印象，所以把原文翻译了一遍。&lt;/em&gt;&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
