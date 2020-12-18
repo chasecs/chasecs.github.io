@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Unix I/O 主要模型介绍 - 编程札记 Programming Notes</title>
+  <meta property="og:title" content="Unix I/O 主要模型介绍 - 编程札记 Programming Notes" />
+  <meta name="twitter:title" content="Unix I/O 主要模型介绍 - 编程札记 Programming Notes" />
+  <meta name="description" content="
+
+5 种 I/O 模型及一些示例
+目前主流的 I/O 方案 epoll / kqueue
+
+">
+  <meta property="og:description" content="
+
+5 种 I/O 模型及一些示例
+目前主流的 I/O 方案 epoll / kqueue
+
+">
+  <meta name="twitter:description" content="
+
+5 种 I/O 模型及一些示例
+目前主流的 I/O 方案 epoll / kqueue
+
+">
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/posts/unix-io-introduction/" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+
+  <div class="main" role="main">
+    <article class="article">
+      
+      
+      <h1 class="article-title">Unix I/O 主要模型介绍</h1>
+      
+      <hr class="article-title-bottom">
+      <ul class="article-meta">
+        <li class="article-meta-date"><time>September 24, 2020</time></li>
+      </ul>
+      
+<aside class="toc">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#阻塞式-io--blocking-io">阻塞式 I/O （ Blocking I/O）</a></li>
+    <li><a href="#非阻塞式-io-nonblocking-io">非阻塞式 I/O （NonBlocking I/O）</a></li>
+    <li><a href="#io-复用-io-multiplexing">I/O 复用 （I/O multiplexing）</a></li>
+    <li><a href="#信号驱动-io--signal-driven-io-">信号驱动 I/O ( signal-driven I/O )</a></li>
+    <li><a href="#异步-ioasynchronous-io-">异步 I/O（asynchronous I/O )</a></li>
+    <li><a href="#linux-当前最流行的io方案epollkqueue">Linux 当前最流行的I/O方案：epoll，kqueue</a></li>
+    <li><a href="#参考资料">参考资料</a></li>
+  </ul>
+</nav>
+</aside>
+      <blockquote>
+<ul>
+<li>5 种 I/O 模型及一些示例</li>
+<li>目前主流的 I/O 方案 epoll / kqueue</li>
+</ul>
+</blockquote>
+<p>在 Unix 系统里，磁盘的文件读写、网络通讯等功能的核心部分都是 I/O， open， read ， write ，connect 等系统调用都属于 I/O 操作。因为 I/O 操作都比较耗时，因此有了阻塞、非阻塞、同步、异步等不同 I/O 模型。</p>
+<p>I/O 操作引发的阻塞是指进程中断执行，等待其它的工作（通常是比较耗时的）准备就绪再恢复。阻塞可能出现在两个阶段：</p>
+<ul>
+<li>阶段一：等待数据就绪（例如从硬盘读取数据完成）</li>
+<li>阶段二：把数据从内核复制到用户空间</li>
+</ul>
+<p>按照《Unix Network Programming》（下称 UNP）的分类，Unix 有 5 种 I/O 模型：</p>
+<ul>
+<li>阻塞式 I/O （ Blocking I/O）</li>
+<li>非阻塞式 I/O （NonBlocking I/O）</li>
+<li>I/O 复用 （I/O multiplexing）</li>
+<li>信号驱动 I/O ( signal-driven I/O )</li>
+<li>异步 I/O （asynchronous I/O )</li>
+</ul>
+<p>他们在上述两个阶段的阻塞情况和处理方式有所差别。</p>
+<p><img src="http://www.masterraghu.com/subjects/np/introduction/unix_network_programming_v1.3/files/06fig06.gif" alt="graphics/06fig06.gif"></p>
+<p>UNP对I/O模型的分类比较严格，认为只有前4个都属于同步的（synchronous），只有第5个属于异步（asynchronous）。</p>
+<p>不过，目前网上也有很多说法认为把 I/O 复用，epoll，kqueue 归为异步 I/O，如下表：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Blocking</th>
+<th>非阻塞</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Synchronous</td>
+<td>read/write</td>
+<td>read/write(O_NONBLOCK)</td>
+</tr>
+<tr>
+<td>Asynchronous</td>
+<td>I/O multiplexing(select/poll/epoll)</td>
+<td>AIO</td>
+</tr>
+</tbody>
+</table>
+<p>虽然在分类上有不通的说法，但弄清楚 I/O 最关键的阻塞、非阻塞等概念，对于理解各种不同的 I/O 方案就没有太大问题。</p>
+<h2 id="阻塞式-io--blocking-io">阻塞式 I/O （ Blocking I/O）</h2>
+<p>阻塞式是最原始的 I/O 模型，默认情况下，包括 read、 write、connect、accept 等的 I/O 操作默认都是阻塞式的。</p>
+<p>阻塞式 I/O，当系统调用（如下面代码中的 <code>write</code> )执行后，进程会停止继续执行，直到该系统调用完成工作（<code>write</code>写入数据），进程才继续执行之后的代码。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="cp">#include</span> <span class="cpf">&#34;apue.h&#34;</span><span class="cp">
+</span><span class="cp">#include</span> <span class="cpf">&lt;errno.h&gt;</span><span class="cp">
+</span><span class="cp">#include</span> <span class="cpf">&lt;time.h&gt;</span><span class="cp">
+</span><span class="cp"></span>
+<span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">500000</span><span class="p">];</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">ntowrite</span><span class="p">,</span> <span class="n">nwrite</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">ptr</span><span class="p">;</span>
+
+    <span class="n">ntowrite</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">STDIN_FILENO</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;read %d bytes</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">ntowrite</span><span class="p">);</span>
+
+    <span class="n">ptr</span> <span class="o">=</span> <span class="n">buf</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">ntowrite</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">errno</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">clock_t</span> <span class="n">begin</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+	      <span class="c1">//write is blocking
+</span><span class="c1"></span>        <span class="n">nwrite</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">STDOUT_FILENO</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">ntowrite</span><span class="p">);</span>
+        <span class="n">clock_t</span> <span class="n">end</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+				<span class="c1">//counting time consumed by write() 
+</span><span class="c1"></span>        <span class="kt">double</span> <span class="n">time_spent</span> <span class="o">=</span> <span class="p">(</span><span class="kt">double</span><span class="p">)(</span><span class="n">end</span> <span class="o">-</span> <span class="n">begin</span><span class="p">)</span> <span class="o">/</span> <span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\n</span><span class="s">nwrite = %d, errno = %d, time = %f</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">nwrite</span><span class="p">,</span> <span class="n">errno</span><span class="p">,</span> <span class="n">time_spent</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">nwrite</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">ptr</span> <span class="o">+=</span> <span class="n">nwrite</span><span class="p">;</span>
+            <span class="n">ntowrite</span> <span class="o">-=</span> <span class="n">nwrite</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>编译上述代码，然后找一个测试文件运行</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ gcc -o blk blocking.c
+$ ./blk &lt; test_file
+</code></pre></td></tr></table>
+</div>
+</div><p>可以看到输出以下结果（nwrite 的数值因测试文件的不同有差异）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nv">nwrite</span> <span class="o">=</span> 30015, <span class="nv">errno</span> <span class="o">=</span> 0, <span class="nb">time</span> <span class="o">=</span> 0.000371
+</code></pre></td></tr></table>
+</div>
+</div><p>可以看到 write 花费的时间是  0.000371 秒，在这段时间内，进程是阻塞的。</p>
+<p><strong>阻塞式 I/O 很难应对高并发的应用场景</strong>，因为每次阻塞，都有一个进程被搁置起来，直到完成工作，才会去处理下一个请求。</p>
+<h2 id="非阻塞式-io-nonblocking-io">非阻塞式 I/O （NonBlocking I/O）</h2>
+<p>在非阻塞式模型下，I/O 操作启动后，如果工作还未完成，内核会马上返回一个错误消息（EWOULDBLOCK或者EAGAIN 等) ，而不是像阻塞式一样等到完成工作再交出进程。</p>
+<p>非阻塞式 I/O 可以通过 <code>fcntl</code> 函数修改“文件描述符”实现， 例如改造上文例子的 <code>STDOUT_FILEN</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="n">flags</span> <span class="o">=</span> <span class="n">fcntl</span><span class="p">(</span><span class="n">STDOUT_FILEN</span><span class="p">,</span> <span class="n">F_GETFL</span><span class="p">);</span>
+<span class="n">flags</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">O_NONBLOCK</span><span class="p">;</span>
+<span class="n">fcntl</span><span class="p">(</span><span class="n">STDOUT_FILEN</span><span class="p">,</span> <span class="n">F_SETFL</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>改成非阻塞之后的主要代码如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+
+    <span class="p">...</span>
+
+    <span class="n">set_fl</span><span class="p">(</span><span class="n">STDOUT_FILENO</span><span class="p">,</span> <span class="n">O_NONBLOCK</span><span class="p">);</span> <span class="cm">/* set nonblocking */</span>
+
+    <span class="n">ptr</span> <span class="o">=</span> <span class="n">buf</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">ntowrite</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">errno</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">clock_t</span> <span class="n">begin</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+        <span class="c1">//write is non-blocking now
+</span><span class="c1"></span>        <span class="n">nwrite</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">STDOUT_FILENO</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">ntowrite</span><span class="p">);</span>
+        <span class="n">clock_t</span> <span class="n">end</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+        <span class="kt">double</span> <span class="n">time_spent</span> <span class="o">=</span> <span class="p">(</span><span class="kt">double</span><span class="p">)(</span><span class="n">end</span> <span class="o">-</span> <span class="n">begin</span><span class="p">)</span> <span class="o">/</span> <span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;nwrite = %d, errno = %d, time = %f</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">nwrite</span><span class="p">,</span> <span class="n">errno</span><span class="p">,</span> <span class="n">time_spent</span><span class="p">);</span>
+
+				<span class="p">...</span>
+    <span class="p">}</span>
+
+    <span class="n">clr_fl</span><span class="p">(</span><span class="n">STDOUT_FILENO</span><span class="p">,</span> <span class="n">O_NONBLOCK</span><span class="p">);</span> <span class="cm">/* clear nonblocking */</span>
+
+    <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">set_fl</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">)</span> <span class="cm">/* flags are file status flags to turn on */</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">val</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="n">val</span> <span class="o">=</span> <span class="n">fcntl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">F_GETFL</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&#34;fcntl F_GETFL error&#34;</span><span class="p">);</span>
+
+    <span class="n">val</span> <span class="o">|=</span> <span class="n">flags</span><span class="p">;</span> <span class="cm">/* turn on flags */</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">fcntl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">F_SETFL</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&#34;fcntl F_SETFL error&#34;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">clr_fl</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">)</span> <span class="cm">/* flags are file status flags to turn off */</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">val</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="n">val</span> <span class="o">=</span> <span class="n">fcntl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">F_GETFL</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&#34;fcntl F_GETFL error&#34;</span><span class="p">);</span>
+
+    <span class="n">val</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">flags</span><span class="p">;</span> <span class="cm">/* turn flags off */</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">fcntl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">F_SETFL</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&#34;fcntl F_SETFL error&#34;</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>编译上述代码，然后找一个测试文件运行</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ gcc -o nblk nonblocking.c
+$ ./nblk &lt; test_file 2&gt;log
+</code></pre></td></tr></table>
+</div>
+</div><p>打开 log 日志可以看到类似下面的结果</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nb">read</span> <span class="m">30015</span> bytes
+<span class="nv">nwrite</span> <span class="o">=</span> 989, <span class="nv">errno</span> <span class="o">=</span> 0, <span class="nb">time</span> <span class="o">=</span> 0.000019
+<span class="nv">nwrite</span> <span class="o">=</span> -1, <span class="nv">errno</span> <span class="o">=</span> 35, <span class="nb">time</span> <span class="o">=</span> 0.000002
+<span class="nv">nwrite</span> <span class="o">=</span> -1, <span class="nv">errno</span> <span class="o">=</span> 35, <span class="nb">time</span> <span class="o">=</span> 0.000002
+....
+<span class="nv">nwrite</span> <span class="o">=</span> 995, <span class="nv">errno</span> <span class="o">=</span> 0, <span class="nb">time</span> <span class="o">=</span> 0.000006
+<span class="nv">nwrite</span> <span class="o">=</span> -1, <span class="nv">errno</span> <span class="o">=</span> 35, <span class="nb">time</span> <span class="o">=</span> 0.000002
+....
+<span class="nv">nwrite</span> <span class="o">=</span> -1, <span class="nv">errno</span> <span class="o">=</span> 35, <span class="nb">time</span> <span class="o">=</span> 0.000001
+<span class="nv">nwrite</span> <span class="o">=</span> 993, <span class="nv">errno</span> <span class="o">=</span> 0, <span class="nb">time</span> <span class="o">=</span> 0.000006
+..
+</code></pre></td></tr></table>
+</div>
+</div><p>在非阻塞模式下，每次write 的响应时间快了很多，没有数据的时候会返回 errno =35 (对应 EAGAIN），然后去轮询 write 的结果。<strong>这种非阻塞模式，对 CPU 的消耗比较大，因此并没有被广泛应用。</strong></p>
+<h2 id="io-复用-io-multiplexing">I/O 复用 （I/O multiplexing）</h2>
+<p>multiplexing 使用 select、 poll 等函数实现，<strong>使阻塞发生在 select 等函数里，而不是阻塞进程。</strong></p>
+<p>select 可以<strong>同时监听多个文件描述符</strong>，它执行后会处于等待状态，当有一个或者多个文件描述符变成“就绪”状态，就会继续向下执行，如此循环。</p>
+<p>以下是使用 select 处理 socket I/O 的代码片段：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c">		<span class="kt">int</span> <span class="n">fds</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+    <span class="n">fd_set</span> <span class="n">rset</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">client</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">client</span><span class="p">));</span>
+        <span class="n">addrlen</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+<span class="c1">// 添加 5 个文件描述符
+</span><span class="c1"></span>        <span class="n">fds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">accept</span><span class="p">(</span><span class="n">sockfd</span><span class="p">,</span> <span class="p">(</span><span class="k">struct</span> <span class="n">sockaddr</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">client</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">addrlen</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">fds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">max</span><span class="p">)</span>
+            <span class="n">max</span> <span class="o">=</span> <span class="n">fds</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="p">}</span>
+
+		<span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">FD_ZERO</span><span class="p">(</span><span class="o">&amp;</span><span class="n">rset</span><span class="p">);</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">FD_SET</span><span class="p">(</span><span class="n">fds</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">rset</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="n">puts</span><span class="p">(</span><span class="s">&#34;round again&#34;</span><span class="p">);</span>
+
+				<span class="c1">//select 监听全部5个 fd，当有一个或以上 fd 就绪时，就会向下执行
+</span><span class="c1"></span>        <span class="n">select</span><span class="p">(</span><span class="n">max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">rset</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+					<span class="c1">//判断是哪一个 fd 符合可读状态，执行 read
+</span><span class="c1"></span>            <span class="k">if</span> <span class="p">(</span><span class="n">FD_ISSET</span><span class="p">(</span><span class="n">fds</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">rset</span><span class="p">))</span>
+            <span class="p">{</span>
+                <span class="n">memset</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">MAXBUF</span><span class="p">);</span>
+                <span class="n">read</span><span class="p">(</span><span class="n">fds</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">MAXBUF</span><span class="p">);</span>
+                <span class="n">puts</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>poll 的处理方法与 select 类似，不过它们属于比较早期的方案。现在<strong>广泛使用的方案性能表现更好的 epoll（linux 平台） ， kqueue（ FreeBSD，MacOS）。</strong></p>
+<h2 id="信号驱动-io--signal-driven-io-">信号驱动 I/O ( signal-driven I/O )</h2>
+<p>信号驱动 I/O模型下，启动操作后，内核会在文件描述符准备就绪时发出信号，我们要根据收到的不同信号，作相应的处理，在等待信号期间进程不阻塞。</p>
+<p>实现信号驱动有三个步骤：</p>
+<ol>
+<li>设置接受信号的进程，将它和发出信号文件描述符 fd 绑定：<code>fcntl(fd, F_SETOWN, pid)</code></li>
+<li>创建信号处理方法，例如 <code>sa.sa_handler = sigioHandler;</code></li>
+<li>使用 <code>sigaction</code> 函数监听信号（如 SIGIO 信号 ）： <code>sigaction(SIGIO, &amp;sa, NULL)</code></li>
+</ol>
+<p>以 write 为例，使用 signal I/O 的关键代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="k">static</span> <span class="k">volatile</span> <span class="n">sig_atomic_t</span> <span class="n">gotSigio</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">sigioHandler</span><span class="p">(</span><span class="kt">int</span> <span class="n">sig</span><span class="p">){</span>
+    <span class="n">gotSigio</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span> <span class="p">{</span>
+		<span class="k">struct</span> <span class="n">sigaction</span> <span class="n">sa</span><span class="p">;</span>
+		<span class="cm">/* Establish handler for &#34;I/O possible&#34; signal */</span>
+		<span class="n">sigemptyset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sa</span><span class="p">.</span><span class="n">sa_mask</span><span class="p">);</span>
+		<span class="n">sa</span><span class="p">.</span><span class="n">sa_flags</span> <span class="o">=</span> <span class="n">SA_RESTART</span><span class="p">;</span>
+		<span class="n">sa</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="n">sigioHandler</span><span class="p">;</span>
+		<span class="c1">// On Linux platform
+</span><span class="c1"></span>		<span class="k">if</span> <span class="p">(</span><span class="n">sigaction</span><span class="p">(</span><span class="n">SIGIO</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sa</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+		    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;sigaction&#34;</span><span class="p">);</span>
+		
+		<span class="cm">/* 设置当前进程作为信号的接受者 */</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">fcntl</span><span class="p">(</span><span class="n">STDOUT_FILENO</span><span class="p">,</span> <span class="n">F_SETOWN</span><span class="p">,</span> <span class="n">getpid</span><span class="p">())</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+		    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;fcntl(F_SETOWN)&#34;</span><span class="p">);</span>
+		
+		<span class="cm">/* 启动信号功能，设置非阻塞 */</span>
+		<span class="n">set_fl</span><span class="p">(</span><span class="n">STDOUT_FILENO</span><span class="p">,</span> <span class="n">O_ASYNC</span> <span class="o">|</span> <span class="n">O_NONBLOCK</span><span class="p">);</span>
+
+		<span class="p">...</span>
+		<span class="k">while</span> <span class="p">(</span><span class="n">ntowrite</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+       <span class="p">...</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">gotSigio</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">gotSigio</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="p">....</span>
+            <span class="n">nwrite</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">STDOUT_FILENO</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">ntowrite</span><span class="p">);</span>
+           
+					<span class="p">....</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>信号驱动 I/O 在应用上并不是很流行，网上一些资料和《The Linux Programming Interface 》（p1355）一书提到，epoll 信号驱动I/O 和 epoll 性能相近，但是有一些劣势，比如，信号处理复杂，因为信号种类繁多，每种都要处理；需要 non-blocking 配合使用。</p>
+<p>除此之外，因为无法传参数到 sa_handler 里，只能在里面修改全局变量，使用非常不方便。像上面的例子，只能在接收到信号时修改全局变量 <code>gotSigio</code>，然后再去轮询  <code>gotSigio</code> 是否变化，十分低效。</p>
+<h2 id="异步-ioasynchronous-io-">异步 I/O（asynchronous I/O )</h2>
+<p>在 UNP 一书的定义里，异步I/O 是指操作启动后，内核<strong>完全处理好这个操作（包括第一、第二阶段）</strong>，再通知进程。</p>
+<p>符合这个要求的库在 linux 平台有 <code>aio</code> ，不过貌似有一些缺陷，没有太多应用。在 windows 平台，则有比较成熟的 <code>iocp</code> 接口。 <code>iocp</code> 也是 windows 处理 I/O 操作的最流行的方案。</p>
+<h2 id="linux-当前最流行的io方案epollkqueue">Linux 当前最流行的I/O方案：epoll，kqueue</h2>
+<p>*inux 平台目前最主要的 I/O 方案是 <code>epoll</code> （Linux）和 <code>kqueue</code> （BSD等），它们的性能表现最好。</p>
+<p>以 <code>kqueue</code> 为例，它的处理步骤主要是：</p>
+<ol>
+<li>声明一个队列</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="n">kq</span> <span class="o">=</span> <span class="n">kqueue</span><span class="p">();</span>
+</code></pre></td></tr></table>
+</div>
+</div><ol start="2">
+<li>声明并初始化要监听的事件 evSet ：</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c">		<span class="k">struct</span> <span class="n">kevent</span> <span class="n">evSet</span><span class="p">;</span>
+    <span class="c1">//给 evSet 赋值
+</span><span class="c1"></span>    <span class="n">EV_SET</span><span class="p">(</span><span class="o">&amp;</span><span class="n">evSet</span><span class="p">,</span> <span class="n">localFd</span><span class="p">,</span> <span class="n">EVFILT_READ</span><span class="p">,</span> <span class="n">EV_ADD</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</code></pre></td></tr></table>
+</div>
+</div><ol start="3">
+<li>把事件添加到队列中（可以添加多个的不同事件）</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="n">kevent</span><span class="p">(</span><span class="n">kq</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">evSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><ol start="4">
+<li>当有一个以上的事件就绪时，读取事件并做相应处理</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="n">nev</span> <span class="o">=</span> <span class="n">kevent</span><span class="p">(</span><span class="n">kq</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">evList</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nev</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+		<span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">evList</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">ident</span><span class="p">;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">evList</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">EV_EOF</span><span class="p">){</span>
+			  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;Disconnect</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+        <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span> <span class="p">(...){</span>
+
+		<span class="p">}</span>
+	<span class="p">.....</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p><code>epoll</code> 和 <code>kqueue</code> 类似，它们的处理方式和上文 <code>select</code> 很像，都是把多个文件描述符放到一个监听队列里，当有一个以上事件就绪时，再处理相应的事件。<code>epoll</code> 和 <code>kqueue</code> 优势是对队列事件的处理更加高效。</p>
+<p>目前，包括 *<em>Nodejs 的底层 I/O 库 <a href="http://docs.libuv.org/en/v1.x/index.html">libuv</a> 和 Golang 的 netpoll ，在 <em>inux 平台使用的方案都是 epoll 和 kqueue 。</em></em></p>
+<p>以 netpoll 为例，I/O 操作最后是交给 epoll 等接口。和直接使用原生 epoll 接口不同的是，golang 是在 goroutine 层面进行这一 I/O 操作，当流程进入 epoll 等接口之后，当前 goroutine 变成阻塞状态，等待 I/O 完成后，再被重新调度。</p>
+<p>最后，除了本文已经提到的接口，还有其它的一些 I/O 方案存在，今年以来，linux 平台新近出现的 I/O 接口 <code>io_uring</code> 受到不少关注，包括 libuv 等都在尝试引入 <code>io_uring</code> 接口，值得继续留意。</p>
+<p>文章涉及的代码示例存放在： <a href="https://github.com/chasecs/io-playground">io-playground</a></p>
+<h2 id="参考资料">参考资料</h2>
+<p>nonblocking</p>
+<p><a href="http://www.cs.columbia.edu/~jae/4118/L08-adv-io.html">http://www.cs.columbia.edu/~jae/4118/L08-adv-io.html</a></p>
+<p>select，epoll</p>
+<p><a href="https://devarea.com/linux-io-multiplexing-select-vs-poll-vs-epoll/#.X0YjxhMzZTY">LINUX – IO MULTIPLEXING – SELECT VS POLL VS EPOLL</a></p>
+<p><a href="https://eklitzke.org/blocking-io-nonblocking-io-and-epoll">https://eklitzke.org/blocking-io-nonblocking-io-and-epoll</a></p>
+<p>Blocking vs. non-blocking sockets</p>
+<p>[https://www.scottklement.com/rpg/socktut/nonblocking.html</p>
+<p>signal I/O</p>
+<p><a href="https://www.man7.org/tlpi/code/online/diff/altio/demo_sigio.c.html">https://www.man7.org/tlpi/code/online/diff/altio/demo_sigio.c.html</a></p>
+<p><a href="http://www.cs.fsu.edu/~xyuan/cop5570/lect19_signaldrivenio-1.pptx">http://www.cs.fsu.edu/~xyuan/cop5570/lect19_signaldrivenio-1.pptx</a></p>
+<p>讨论 signal I/O 为何无法传参到 signal_handler</p>
+<p><a href="https://stackoverflow.com/questions/6970224/providing-passing-argument-to-signal-handler">https://stackoverflow.com/questions/6970224/providing-passing-argument-to-signal-handler</a></p>
+<p>io_uring</p>
+<p><a href="https://kernel.dk/io_uring.pdf">https://kernel.dk/io_uring.pdf</a></p>
+<p><a href="https://lwn.net/Articles/810414/">https://lwn.net/Articles/810414/</a></p>
+<p><a href="https://stackoverflow.com/questions/13407542/is-there-really-no-asynchronous-block-i-o-on-linux">https://stackoverflow.com/questions/13407542/is-there-really-no-asynchronous-block-i-o-on-linux</a></p>
+<p><a href="https://www.scottklement.com/rpg/socktut/nonblocking.html">https://www.scottklement.com/rpg/socktut/nonblocking.html</a>)</p>
+    </article>
+
+    
+
+
+    <ul class="pager article-pager">
+      <li class="pager-newer">
+          <a href="/posts/the-philosophy-of-go-error-handling/" data-toggle="tooltip" data-placement="top" title="Go Error 的设计哲学">&lt; Newer</a>
+      </li>
+      <li class="pager-older">
+        <a href="/posts/golang-network-programming-implementation/" data-toggle="tooltip" data-placement="top" title="Go 网络编程的实现">Older &gt;</a>
+      </li>
+    </ul>
+  </div>
+
+
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+</body>
+</html>

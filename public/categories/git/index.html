@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>git - 编程札记 Programming Notes</title>
+  <meta property="og:title" content="git - 编程札记 Programming Notes" />
+  <meta name="twitter:title" content="git - 编程札记 Programming Notes" />
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/categories/git/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+  <link href="/categories/git/index.xml" rel="alternate" type="application/rss+xml" title="编程札记 Programming Notes" />
+  <link href="/categories/git/index.xml" rel="feed" type="application/rss+xml" title="编程札记 Programming Notes" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+
+  <div class="main" role="main">
+    <section class="list term-list">
+      <article class="article">
+        <a href="/posts/2017-09-28-how-to-build-private-repo-server-for-android-source-code/" class="article-titles">
+          <h2 class="article-title">搭建支持 Repo 的 Android 源码镜像（Repo 服务器）</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>September 28, 2017</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/git/">
+              <i class="fas fa-folder"></i>
+              git
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          方案厂商给了一份 Android 源码，没有 manifest.git 文件，不支持 Repo。为了基于这份代码搭建支持 Repo 的镜像服务器，断断续续摸索了两个星期，总算 hacking 成功。
+本文用到的主要知识：
+ shell script git 指令  一、关于 Repo 基于 Android 源码的开发工作大多要用到 Git 和 Repo。
+Repo 是基于 Git 的仓库管理工具，支持同时管理许多个 Git 仓库。因为 Android 源码包含了许多个 Git 仓库，使用 Repo 可以简化许多工作。比如，使用一个 Repo 命令，就可以从多个不同的仓库下载文件，同步到你的计算机上。
+搭建支持 Repo 的 Android 源码镜像，主要步骤如下：
+ 在服务器搭建 Git 托管服务器 在客户端安装配置好 Repo 在客户端创建 manifest/default.xml 并上传到 Git 服务器 将客户端 Android 源码上传到 Git 服务器 在其它获得 git 权限的客户端使用：Repo init; Repo sync  二、搭建 Git 服务器 搭建 Git 服务器这部分的内容相对独立，和 Repo 的关系不大，因此另外写了一篇文章：
+        </div>
+        <div class="article-readmore"><a href="/posts/2017-09-28-how-to-build-private-repo-server-for-android-source-code/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+    </section>
+    
+
+
+  </div>
+
+
+
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-rsslink">
+      <a href="/categories/git/index.xml" type="application/rss+xml" target="_blank" title="RSS">
+        <i class="fas fa-rss"></i>
+      </a>
+    </li>
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+</body>
+</html>

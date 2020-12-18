@@ -1,0 +1,39 @@
+[submodule "themes/hugo-kiera"]
+	path = themes/hugo-kiera
+	url = https://github.com/funkydan2/hugo-kiera.git
+[submodule "themes/charaka-hugo-theme"]
+	path = themes/charaka-hugo-theme
+	url = https://github.com/natarajmb/charaka-hugo-theme.git
+[submodule "themes/tale"]
+	path = themes/tale
+	url = https://github.com/EmielH/tale-hugo.git
+[submodule "hugo-ink"]
+	path = hugo-ink
+	url = https://github.com/knadh/hugo-ink.git
+[submodule "themes/ink"]
+	path = themes/ink
+	url = https://github.com/knadh/hugo-ink.git
+[submodule "themes/hugo-ink"]
+	path = themes/hugo-ink
+	url = https://github.com/knadh/hugo-ink.git
+[submodule "themes/whiteplain"]
+	path = themes/whiteplain
+	url = https://github.com/taikii/whiteplain.git
+[submodule "themes/hugo-clarity"]
+	path = themes/hugo-clarity
+	url = https://github.com/chipzoller/hugo-clarity
+[submodule "themes/hugo-coder"]
+	path = themes/hugo-coder
+	url = https://github.com/luizdepra/hugo-coder.git
+[submodule "themes/harbor"]
+	path = themes/harbor
+	url = https://github.com/matsuyoshi30/harbor.git
+[submodule "themes/hugo-theme-codex"]
+	path = themes/hugo-theme-codex
+	url = https://github.com/jakewies/hugo-theme-codex.git
+[submodule "themes/book"]
+	path = themes/book
+	url = https://github.com/alex-shpak/hugo-book
+[submodule "themes/beautifulhugo"]
+	path = themes/beautifulhugo
+	url = https://github.com/halogenica/beautifulhugo.git

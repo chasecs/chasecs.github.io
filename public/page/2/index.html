@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>编程札记 Programming Notes</title>
+  <meta property="og:title" content="编程札记 Programming Notes" />
+  <meta name="twitter:title" content="编程札记 Programming Notes" />
+  <meta name="author" content="ttimehc"/>
+  <meta property="og:site_name" content="编程札记 Programming Notes" />
+  <meta property="og:url" content="https://example.com/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.74.3" />
+  <link href="/index.xml" rel="alternate" type="application/rss+xml" title="编程札记 Programming Notes" />
+  <link href="/index.xml" rel="feed" type="application/rss+xml" title="编程札记 Programming Notes" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">编程札记 Programming Notes</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+
+  <div class="main" role="main">
+    <section class="list home-list">
+      <article class="article">
+        <a href="/posts/2019-07-28-password-hashing-md/" class="article-titles">
+          <h2 class="article-title">密码哈希(Password Hashing)</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>July 28, 2019</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/security/">
+              <i class="fas fa-folder"></i>
+              security
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p>密码哈希（password hashing），是常用的密码管理技术。在 web 开发等工程实践中，账户密码等敏感信息通常不会明文存储到数据库，而是转换成一段哈希值存储。这样即使哪天数据库泄露了，用户的密码也不会一眼被识破。密码哈希有以下特点：</p>
+<ol>
+<li>把任意长度的字符串，转换成固定长度的随机字符串。</li>
+<li>单向加密，不可逆转</li>
+</ol>
+        </div>
+        <div class="article-readmore"><a href="/posts/2019-07-28-password-hashing-md/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/" class="article-titles">
+          <h2 class="article-title">翻译：JavaScript Promises 实现原理详解（JavaScript Promises ... In Wicked Detail）</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>October 7, 2017</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/javascript/">
+              <i class="fas fa-folder"></i>
+              javascript
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <blockquote>
+</blockquote>
+<p><strong>译按：</strong>
+<em>Promise 是异步编程的一种解决方案，让 javascript 可以从杂乱回调函数中解脱出来。后来 ES6 标准把 Promise 纳入其中，原生提供了 Promise 对象。Promise 也成为 ES6 最主要的特性之一。</em><br>
+<em>网上介绍 promise 使用方法的文章很多，解释其原理却很少。这篇文章循序渐进地实现了一遍 promise，分析透彻，对了解 promise 的工作原理很有帮助。为了加深印象，所以把原文翻译了一遍。</em></p>
+        </div>
+        <div class="article-readmore"><a href="/posts/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/2017-09-28-how-to-build-private-repo-server-for-android-source-code/" class="article-titles">
+          <h2 class="article-title">搭建支持 Repo 的 Android 源码镜像（Repo 服务器）</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>September 28, 2017</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/git/">
+              <i class="fas fa-folder"></i>
+              git
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          方案厂商给了一份 Android 源码，没有 manifest.git 文件，不支持 Repo。为了基于这份代码搭建支持 Repo 的镜像服务器，断断续续摸索了两个星期，总算 hacking 成功。
+本文用到的主要知识：
+ shell script git 指令  一、关于 Repo 基于 Android 源码的开发工作大多要用到 Git 和 Repo。
+Repo 是基于 Git 的仓库管理工具，支持同时管理许多个 Git 仓库。因为 Android 源码包含了许多个 Git 仓库，使用 Repo 可以简化许多工作。比如，使用一个 Repo 命令，就可以从多个不同的仓库下载文件，同步到你的计算机上。
+搭建支持 Repo 的 Android 源码镜像，主要步骤如下：
+ 在服务器搭建 Git 托管服务器 在客户端安装配置好 Repo 在客户端创建 manifest/default.xml 并上传到 Git 服务器 将客户端 Android 源码上传到 Git 服务器 在其它获得 git 权限的客户端使用：Repo init; Repo sync  二、搭建 Git 服务器 搭建 Git 服务器这部分的内容相对独立，和 Repo 的关系不大，因此另外写了一篇文章：
+        </div>
+        <div class="article-readmore"><a href="/posts/2017-09-28-how-to-build-private-repo-server-for-android-source-code/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/2017-09-02-react-redux-shopping-cart-demo/" class="article-titles">
+          <h2 class="article-title">React &#43; Redux 应用的开发流程，以购物车为例</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>September 2, 2017</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/react/">
+              <i class="fas fa-folder"></i>
+              React
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          <p><strong>项目的 repository：<a href="https://github.com/chasecs/react-redux-shopping-cart-demo">react-redux-shopping-cart-demo</a></strong></p>
+<p>Redux 是最热门的 React 架构。介绍 Redux 的文章不少，官方文档的内容也非常丰富。<br>
+本文根据个人对 Redux 的理解，提供一种和官方文档不一样的视角，阐述如何从零开始开发一个 React + Redux 应用。</p>
+        </div>
+        <div class="article-readmore"><a href="/posts/2017-09-02-react-redux-shopping-cart-demo/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+      <article class="article">
+        <a href="/posts/2017-08-09-react_native_packing_native_module_for_android_n_ios/" class="article-titles">
+          <h2 class="article-title">React Native 原生模块库打包指南</h2>
+          
+        </a>
+        <ul class="article-meta">
+          <li class="article-meta-date"><time>August 9, 2017</time></li>
+          <li class="article-meta-categories">
+            <a href="/categories/react/">
+              <i class="fas fa-folder"></i>
+              React
+            </a>&nbsp;
+          </li>
+        </ul>
+        <div class="article-content">
+          最终项目的 repository：react-native-baidu-ocr
+原生模块（Native Module）的使用方式 React Native（下称RN）的官方文档介绍了Native Modules （下称“原生模块”）的使用方法，用于访问原生平台的 API。但是，文档里的方法并不适合直接在项目使用。
+以 iOS 为例，如果按照 RN 文档的做法，你需要用 Xcode 项目的 .xcodeproj 文件，在里面新建一个 .m Objective-C File 和一个 .h Header File，然后在这两个文件里实现一个“RCTBridgeModule”协议的 Objective-C 类。
+这样做的缺点我想到的有两个，一是，如果要实现的原生模块多了，.m 和 .h 也会递增，目录容易混乱难以管理；二是，这样的原生模块不容易复用，其它项目没法直接使用这个原生模块。
+通行的做法是，将实现后原生模块打包好，然后存放在项目的node_modules的文件内，供 APP 调用。
+打包原生模块的主要工作 打包一个原生模块，最主要的工作有两部分：
+ 安装该模块，即 &ldquo;react-native link&rdquo; 完成的工作。 写代码，对于iOS，是写一个实现了“RCTBridgeModule”协议的Objective-C类；对于Android，是写一个继承了 ReactContextBaseJavaModule的Java类。  所以，要打包 React Native 的原生模块，你最好有以下知识储备：
+ 有 RN 开发经验。如 RN 文档所说，原生模块是该框架的高级特性，当然是有一定的经验更易理解。 了解 Java 和 Objective-C， 至少能看懂这两种代码。  本文将以百度 OCR 的 iOS SDK &amp; Android SDK 为例，介绍如何将其打包为一个名为 “react-native-baidu-ocr” 的 原生模块库（library），供 RN APP 调用。
+        </div>
+        <div class="article-readmore"><a href="/posts/2017-08-09-react_native_packing_native_module_for_android_n_ios/">Read more...</a></div>
+        <div class="article-floatclear"></div>
+      </article>
+    </section>
+    
+<ul class="pagination">
+  <li class="page-item">
+    <a href="/" class="page-link" aria-label="First"><span aria-hidden="true">&laquo;&laquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a href="/" class="page-link" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/">1</a>
+  </li>
+  <li class="page-item active">
+    <a class="page-link" href="/page/2/">2</a>
+  </li>
+  <li class="page-item disabled">
+    <a  class="page-link" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a href="/page/2/" class="page-link" aria-label="Last"><span aria-hidden="true">&raquo;&raquo;</span></a>
+  </li>
+</ul>
+
+
+  </div>
+
+
+
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 ttimehc@gmail.com</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-rsslink">
+      <a href="/index.xml" type="application/rss+xml" target="_blank" title="RSS">
+        <i class="fas fa-rss"></i>
+      </a>
+    </li>
+    <li class="site-footer-item-Github"><a href="http://github.com/chasecs" title="Github">Github</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+
+</body>
+</html>
