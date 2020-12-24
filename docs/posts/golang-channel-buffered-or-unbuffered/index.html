@@ -38,24 +38,25 @@
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">go channel，buffered 与 unbuffered 的区别</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>August 19, 2019</time></li>
-        <li class="article-meta-categories">
-          <a href="/categories/go/">
-            <i class="fas fa-folder"></i>
-            go
-          </a>&nbsp;
-        </li>
-      </ul>
-      
-      <p>go 通过 goroutine 实现并发，而不同的 goroutine 之间需要通过 channel 来通讯，否则就是两段各行其是的代码。</p>
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">go channel，buffered 与 unbuffered 的区别</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>August 19, 2019</time>
+      </li>
+      <li class="article-meta-categories">
+        <a href="/categories/go/">
+          <i class="fas fa-folder"></i>
+          go
+        </a>&nbsp;
+      </li>
+    </ul>
+    
+    <p>go 通过 goroutine 实现并发，而不同的 goroutine 之间需要通过 channel 来通讯，否则就是两段各行其是的代码。</p>
 <h2 id="channel-解决-goroutine-的通讯">channel 解决 goroutine 的通讯</h2>
 <p>看一个 <a href="https://play.golang.org/p/5cvtWy36o8b">code</a></p>
 <div class="highlight"><div class="chroma">
@@ -199,20 +200,46 @@
 <li><a href="https://golang.org/doc/effective_go.html#channels">Effective Go - channels</a></li>
 <li><a href="https://stackoverflow.com/questions/18660533/why-using-unbuffered-channel-in-the-same-goroutine-gives-a-deadlock">why using unbuffered&hellip; stackoverflow</a></li>
 </ul>
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer">
-          <a href="/posts/grpc-go-a-working-demo/" data-toggle="tooltip" data-placement="top" title="gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用">&lt; Newer</a>
-      </li>
-      <li class="pager-older">
-        <a href="/posts/redis-usage-and-its-datatype/" data-toggle="tooltip" data-placement="top" title="redis 的使用场景及其数据类型">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer">
+      <a href="/posts/grpc-go-a-working-demo/" data-toggle="tooltip" data-placement="top"
+        title="gRPC 入门，如何用 go 开发 grpc 服务端/客户端应用">&lt; Newer</a>
+    </li>
+    <li class="pager-older">
+      <a href="/posts/redis-usage-and-its-datatype/" data-toggle="tooltip" data-placement="top"
+        title="redis 的使用场景及其数据类型">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">

@@ -38,24 +38,25 @@
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">密码哈希(Password Hashing)</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>July 28, 2019</time></li>
-        <li class="article-meta-categories">
-          <a href="/categories/security/">
-            <i class="fas fa-folder"></i>
-            security
-          </a>&nbsp;
-        </li>
-      </ul>
-      
-      <p>密码哈希（password hashing），是常用的密码管理技术。在 web 开发等工程实践中，账户密码等敏感信息通常不会明文存储到数据库，而是转换成一段哈希值存储。这样即使哪天数据库泄露了，用户的密码也不会一眼被识破。密码哈希有以下特点：</p>
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">密码哈希(Password Hashing)</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>July 28, 2019</time>
+      </li>
+      <li class="article-meta-categories">
+        <a href="/categories/security/">
+          <i class="fas fa-folder"></i>
+          security
+        </a>&nbsp;
+      </li>
+    </ul>
+    
+    <p>密码哈希（password hashing），是常用的密码管理技术。在 web 开发等工程实践中，账户密码等敏感信息通常不会明文存储到数据库，而是转换成一段哈希值存储。这样即使哪天数据库泄露了，用户的密码也不会一眼被识破。密码哈希有以下特点：</p>
 <ol>
 <li>把任意长度的字符串，转换成固定长度的随机字符串。</li>
 <li>单向加密，不可逆转</li>
@@ -115,20 +116,46 @@
 <li><a href="http://www.ha97.com/4009.html">（总结）密码破解之王：Ophcrack彩虹表(Rainbow Tables)原理详解</a></li>
 <li><a href="https://www.zhihu.com/question/19790488">什么是彩虹表？</a></li>
 </ul>
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer">
-          <a href="/posts/redis-usage-and-its-datatype/" data-toggle="tooltip" data-placement="top" title="redis 的使用场景及其数据类型">&lt; Newer</a>
-      </li>
-      <li class="pager-older">
-        <a href="/posts/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/" data-toggle="tooltip" data-placement="top" title="翻译：JavaScript Promises 实现原理详解（JavaScript Promises ... In Wicked Detail）">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer">
+      <a href="/posts/redis-usage-and-its-datatype/" data-toggle="tooltip" data-placement="top"
+        title="redis 的使用场景及其数据类型">&lt; Newer</a>
+    </li>
+    <li class="pager-older">
+      <a href="/posts/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/" data-toggle="tooltip" data-placement="top"
+        title="翻译：JavaScript Promises 实现原理详解（JavaScript Promises ... In Wicked Detail）">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">

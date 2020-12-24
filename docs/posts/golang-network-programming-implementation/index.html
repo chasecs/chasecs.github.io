@@ -56,23 +56,24 @@ Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, 
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">Go 网络编程的实现</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>July 22, 2020</time></li>
-        <li class="article-meta-categories">
-          <a href="/categories/go/">
-            <i class="fas fa-folder"></i>
-            go
-          </a>&nbsp;
-        </li>
-      </ul>
-      
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">Go 网络编程的实现</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>July 22, 2020</time>
+      </li>
+      <li class="article-meta-categories">
+        <a href="/categories/go/">
+          <i class="fas fa-folder"></i>
+          go
+        </a>&nbsp;
+      </li>
+    </ul>
+    
 <aside class="toc">
   <nav id="TableOfContents">
   <ul>
@@ -92,7 +93,7 @@ Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, 
   </ul>
 </nav>
 </aside>
-      <p>提要：</p>
+    <p>提要：</p>
 <ul>
 <li>TCP 服务端、客户端示例</li>
 <li>Network system calls</li>
@@ -403,20 +404,46 @@ Go 网络编程主要通过 net 包（package）实现，它支持 TCP/IP, UDP, 
 <p><a href="http://www.haifux.org/lectures/217/netLec5.pdf">http://www.haifux.org/lectures/217/netLec5.pdf</a></p>
 <p><a href="http://linasm.sourceforge.net/docs/syscalls/network.php">http://linasm.sourceforge.net/docs/syscalls/network.php</a></p>
 <p><a href="https://www.kernel.org/doc/html/latest/networking/rds.html#socket-interface">https://www.kernel.org/doc/html/latest/networking/rds.html#socket-interface</a></p>
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer">
-          <a href="/posts/unix-io-introduction/" data-toggle="tooltip" data-placement="top" title="Unix I/O 主要模型介绍">&lt; Newer</a>
-      </li>
-      <li class="pager-older">
-        <a href="/posts/go-scheduler-introduction/" data-toggle="tooltip" data-placement="top" title="Go 源码分析：scheduler 工作流程">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer">
+      <a href="/posts/unix-io-introduction/" data-toggle="tooltip" data-placement="top"
+        title="Unix I/O 主要模型介绍">&lt; Newer</a>
+    </li>
+    <li class="pager-older">
+      <a href="/posts/go-scheduler-introduction/" data-toggle="tooltip" data-placement="top"
+        title="Go 源码分析：scheduler 工作流程">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">

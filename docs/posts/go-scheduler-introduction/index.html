@@ -46,23 +46,24 @@ Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">Go 源码分析：scheduler 工作流程</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>June 8, 2020</time></li>
-        <li class="article-meta-categories">
-          <a href="/categories/go/">
-            <i class="fas fa-folder"></i>
-            go
-          </a>&nbsp;
-        </li>
-      </ul>
-      
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">Go 源码分析：scheduler 工作流程</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>June 8, 2020</time>
+      </li>
+      <li class="article-meta-categories">
+        <a href="/categories/go/">
+          <i class="fas fa-folder"></i>
+          go
+        </a>&nbsp;
+      </li>
+    </ul>
+    
 <aside class="toc">
   <nav id="TableOfContents">
   <ul>
@@ -90,7 +91,7 @@ Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系
   </ul>
 </nav>
 </aside>
-      <p><em>注：本文涉及的源码为 go 1.13 版本</em></p>
+    <p><em>注：本文涉及的源码为 go 1.13 版本</em></p>
 <p>最近一直在看 Go 调度器的源码，查了不少资料，对 goroutine 的调度过程有了一些了解，也对 Go 如何支撑高并发、并行计算有个大概的认识。</p>
 <p>Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回收（memory allocator/garbage collector）<a href="https://www.quora.com/How-does-the-Go-runtime-work-What-does-it-consist-of-What-functionalities-does-it-provide-and-what-can-be-expected-from-a-developer-perspective">1</a> 。</p>
 <p>调度器相关的代码主要在 <code>runtime </code> 的 <code>proc.go</code> ， <code>runtime1.go</code> ， <code>runtime2.go</code> 等几个文件，此外还有一些 Go 汇编代码，这些代码大部分在 2015 年成形，至今没有大的修改，目前看来还是比较稳定的。</p>
@@ -500,20 +501,46 @@ Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系
 <li><a href="https://www.altoros.com/blog/golang-internals-part-6-bootstrapping-and-memory-allocator-initialization/">Golang Internals, Part 6: Bootstrapping and Memory Allocator Initialization</a>，了解 go 启动过程</li>
 <li><a href="https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part2.html">scheduling-in-go-part2</a>，详尽，但有部分介绍不是很清晰</li>
 </ul>
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer">
-          <a href="/posts/golang-network-programming-implementation/" data-toggle="tooltip" data-placement="top" title="Go 网络编程的实现">&lt; Newer</a>
-      </li>
-      <li class="pager-older">
-        <a href="/posts/analysis-the-bias-of-a-naive-shuffle-algorithm-17-18-10-050/" data-toggle="tooltip" data-placement="top" title="一个错误洗牌算法的分析">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer">
+      <a href="/posts/golang-network-programming-implementation/" data-toggle="tooltip" data-placement="top"
+        title="Go 网络编程的实现">&lt; Newer</a>
+    </li>
+    <li class="pager-older">
+      <a href="/posts/analysis-the-bias-of-a-naive-shuffle-algorithm-17-18-10-050/" data-toggle="tooltip" data-placement="top"
+        title="一个错误洗牌算法的分析">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">

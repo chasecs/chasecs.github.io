@@ -38,23 +38,24 @@
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">搭建支持 Repo 的 Android 源码镜像（Repo 服务器）</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>September 28, 2017</time></li>
-        <li class="article-meta-categories">
-          <a href="/categories/git/">
-            <i class="fas fa-folder"></i>
-            git
-          </a>&nbsp;
-        </li>
-      </ul>
-      
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">搭建支持 Repo 的 Android 源码镜像（Repo 服务器）</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>September 28, 2017</time>
+      </li>
+      <li class="article-meta-categories">
+        <a href="/categories/git/">
+          <i class="fas fa-folder"></i>
+          git
+        </a>&nbsp;
+      </li>
+    </ul>
+    
 <aside class="toc">
   <nav id="TableOfContents">
   <ul>
@@ -73,7 +74,7 @@
   </ul>
 </nav>
 </aside>
-      <!-- raw HTML omitted -->
+    <!-- raw HTML omitted -->
 <p>方案厂商给了一份 Android 源码，没有 manifest.git 文件，不支持 Repo。为了基于这份代码搭建支持 Repo 的镜像服务器，断断续续摸索了两个星期，总算 hacking 成功。</p>
 <p>本文用到的主要知识：</p>
 <ul>
@@ -540,20 +541,46 @@ git push
 <li><a href="http://blog.csdn.net/hansel/article/details/9798189">Android Repo的manifest XML文件格式</a></li>
 </ul>
 
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer">
-          <a href="/posts/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/" data-toggle="tooltip" data-placement="top" title="翻译：JavaScript Promises 实现原理详解（JavaScript Promises ... In Wicked Detail）">&lt; Newer</a>
-      </li>
-      <li class="pager-older">
-        <a href="/posts/2017-09-02-react-redux-shopping-cart-demo/" data-toggle="tooltip" data-placement="top" title="React &#43; Redux 应用的开发流程，以购物车为例">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer">
+      <a href="/posts/2017-10-07-simplified-chinese-translation-of-javascript-promises-in-wicked-detail/" data-toggle="tooltip" data-placement="top"
+        title="翻译：JavaScript Promises 实现原理详解（JavaScript Promises ... In Wicked Detail）">&lt; Newer</a>
+    </li>
+    <li class="pager-older">
+      <a href="/posts/2017-09-02-react-redux-shopping-cart-demo/" data-toggle="tooltip" data-placement="top"
+        title="React &#43; Redux 应用的开发流程，以购物车为例">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">

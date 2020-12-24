@@ -38,17 +38,18 @@
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">利用 swagger 管理 API 开发</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>November 20, 2019</time></li>
-      </ul>
-      
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">利用 swagger 管理 API 开发</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>November 20, 2019</time>
+      </li>
+    </ul>
+    
 <aside class="toc">
   <nav id="TableOfContents">
   <ul>
@@ -65,7 +66,7 @@
   </ul>
 </nav>
 </aside>
-      <p>swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。</p>
+    <p>swagger 可以通过 yaml 文件自动生成 api 文档，客户端代码等，减少了许多繁琐的工作和前后端沟通，从而提高开发效率。</p>
 <p>第一次知道 swagger 这个工具， 是在 docker 的源码里，docker 客户端和服务端的 API 就是使用 swagger 来管理。最近在一次技术交流会上，听人提到用 swagger 来自动生成 api 文档，省下了许多前后端沟通的工夫，便留心记了下来。</p>
 <p>前几天抽空研究了一下，发现使用 swagger 进行 api 开发，确实可以减少了许多繁琐的工作，大大提高开发和前后端沟通的效率。使用 swagger ，只要在项目里写好 <code>swagger.yaml </code>文件，其他开发人员需要了解 api 的信息时，把它放到线上或下载下来的 swagger editor，就能自动生成 api 文档，调试接口，还可以生成多种语言的客户端代码、服务端代码。</p>
 <p>swagger 最主要的优点，总结有以下几点：</p>
@@ -484,20 +485,46 @@
 <li><a href="https://spin.atomicobject.com/2018/08/30/swagger-api-intro/">Intro to Swagger – A Structured Approach to Creating an API</a></li>
 <li><a href="http://apihandyman.io/writing-openapi-swagger-specification-tutorial-part-3-simplifying-specification-file/#writing-openapi-fka-swagger-specification-tutorial">Writing OpenAPI (fka Swagger) Specification tutorial</a></li>
 </ul>
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer">
-          <a href="/posts/analysis-the-bias-of-a-naive-shuffle-algorithm-17-18-10-050/" data-toggle="tooltip" data-placement="top" title="一个错误洗牌算法的分析">&lt; Newer</a>
-      </li>
-      <li class="pager-older">
-        <a href="/posts/how-to-build-your-golang-web-app/" data-toggle="tooltip" data-placement="top" title="构建 Golang Web 应用的两种方法">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer">
+      <a href="/posts/analysis-the-bias-of-a-naive-shuffle-algorithm-17-18-10-050/" data-toggle="tooltip" data-placement="top"
+        title="一个错误洗牌算法的分析">&lt; Newer</a>
+    </li>
+    <li class="pager-older">
+      <a href="/posts/how-to-build-your-golang-web-app/" data-toggle="tooltip" data-placement="top"
+        title="构建 Golang Web 应用的两种方法">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">

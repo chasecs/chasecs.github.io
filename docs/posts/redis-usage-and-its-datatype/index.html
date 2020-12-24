@@ -53,18 +53,19 @@
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">redis 的使用场景及其数据类型</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>August 9, 2019</time></li>
-      </ul>
-      
-      <p>redis 的使用场景总结有以下几种：</p>
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">redis 的使用场景及其数据类型</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>August 9, 2019</time>
+      </li>
+    </ul>
+    
+    <p>redis 的使用场景总结有以下几种：</p>
 <ul>
 <li>缓存/数据存储。涉及大部分 redis 的数据类型， string，Hash ，Zset ，set 等</li>
 <li>队列。利用 list 类型的 push pop 操作。</li>
@@ -334,20 +335,46 @@ PUBLISH example <span class="m">2</span>
 <li><a href="https://stackoverflow.com/a/18991212/5561328">stackoverflow： hash vs JSON string</a></li>
 <li><a href="https://www.quora.com/What-is-the-usage-of-Redis-pub-sub">quora: usage-of-Redis-pub-sub</a></li>
 </ul>
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer">
-          <a href="/posts/golang-channel-buffered-or-unbuffered/" data-toggle="tooltip" data-placement="top" title="go channel，buffered 与 unbuffered 的区别">&lt; Newer</a>
-      </li>
-      <li class="pager-older">
-        <a href="/posts/2019-07-28-password-hashing-md/" data-toggle="tooltip" data-placement="top" title="密码哈希(Password Hashing)">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer">
+      <a href="/posts/golang-channel-buffered-or-unbuffered/" data-toggle="tooltip" data-placement="top"
+        title="go channel，buffered 与 unbuffered 的区别">&lt; Newer</a>
+    </li>
+    <li class="pager-older">
+      <a href="/posts/2019-07-28-password-hashing-md/" data-toggle="tooltip" data-placement="top"
+        title="密码哈希(Password Hashing)">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">

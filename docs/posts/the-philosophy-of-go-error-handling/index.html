@@ -53,23 +53,24 @@ Go 对错误处理的最初设计和后续优化方案，以及编程过程中�
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">Go Error 的设计哲学</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>December 5, 2020</time></li>
-        <li class="article-meta-categories">
-          <a href="/categories/go/">
-            <i class="fas fa-folder"></i>
-            go
-          </a>&nbsp;
-        </li>
-      </ul>
-      
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">Go Error 的设计哲学</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>December 5, 2020</time>
+      </li>
+      <li class="article-meta-categories">
+        <a href="/categories/go/">
+          <i class="fas fa-folder"></i>
+          go
+        </a>&nbsp;
+      </li>
+    </ul>
+    
 <aside class="toc">
   <nav id="TableOfContents">
   <ul>
@@ -79,7 +80,7 @@ Go 对错误处理的最初设计和后续优化方案，以及编程过程中�
   </ul>
 </nav>
 </aside>
-      <p>最近阅读了不少关于 Go 错误处理的材料和讨论，总结出 Go Error 的设计哲学主要有两点：</p>
+    <p>最近阅读了不少关于 Go 错误处理的材料和讨论，总结出 Go Error 的设计哲学主要有两点：</p>
 <ul>
 <li>处理所有潜在的错误</li>
 <li>Errors Are Value</li>
@@ -311,18 +312,43 @@ Go 对错误处理的最初设计和后续优化方案，以及编程过程中�
 <p>【<a href="https://blog.golang.org/experiment#Errors">https://blog.golang.org/experiment#Errors</a>】 Russ Cox 介绍错误处理的改进进展</p>
 <p>【<a href="https://github.com/golang/go/issues/32437">Proposal: A built-in Go error check function, &ldquo;try&rdquo;</a>】&ldquo;try&rdquo; 提案讨论</p>
 <p>【<a href="https://go.googlesource.com/proposal/+/master/design/go2draft.md">Go 2 Draft Designs</a>】Go 2 设计草案，关于错误部分占了不少，有的已经应用到 Go 1.13</p>
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer pager-noitem">&lt; Newer</li>
-      <li class="pager-older">
-        <a href="/posts/unix-io-introduction/" data-toggle="tooltip" data-placement="top" title="Unix I/O 主要模型介绍">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer pager-noitem">&lt; Newer</li>
+    <li class="pager-older">
+      <a href="/posts/unix-io-introduction/" data-toggle="tooltip" data-placement="top"
+        title="Unix I/O 主要模型介绍">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">

@@ -38,24 +38,25 @@
 </header>
 <hr class="site-header-bottom">
 
-  <div class="main" role="main">
-    <article class="article">
-      
-      
-      <h1 class="article-title">一个错误洗牌算法的分析</h1>
-      
-      <hr class="article-title-bottom">
-      <ul class="article-meta">
-        <li class="article-meta-date"><time>January 3, 2020</time></li>
-        <li class="article-meta-categories">
-          <a href="/categories/algorithm/">
-            <i class="fas fa-folder"></i>
-            Algorithm
-          </a>&nbsp;
-        </li>
-      </ul>
-      
-      <p>将一个长度为 n 的有序数组，重新打乱，随机排序，它算法实现被称作洗牌算法，得名于它的典型应用，扑克牌洗牌。</p>
+<div class="main" role="main">
+  <article class="article">
+    
+    
+    <h1 class="article-title">一个错误洗牌算法的分析</h1>
+    
+    <hr class="article-title-bottom">
+    <ul class="article-meta">
+      <li class="article-meta-date"><time>January 3, 2020</time>
+      </li>
+      <li class="article-meta-categories">
+        <a href="/categories/algorithm/">
+          <i class="fas fa-folder"></i>
+          Algorithm
+        </a>&nbsp;
+      </li>
+    </ul>
+    
+    <p>将一个长度为 n 的有序数组，重新打乱，随机排序，它算法实现被称作洗牌算法，得名于它的典型应用，扑克牌洗牌。</p>
 <p>这个问题有一个 O(n) 复杂度的算法，<a href="%5Bhttps://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle%5D(https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle)">Fisher–Yates shuffle</a>，也称 knuth shuffle，简洁优雅，用 go  实现如下：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
@@ -146,20 +147,46 @@ $$
 <p><a href="https://stats.stackexchange.com/a/3087">stackexchange</a> 提到另一个思路：</p>
 <p><em>This problem can be analyzed fully as a Markov chain on the Cayley graph of the permutation group.</em></p>
 <p>有机会也要了解一下。</p>
-    </article>
+  </article>
 
-    
+  
 
 
-    <ul class="pager article-pager">
-      <li class="pager-newer">
-          <a href="/posts/go-scheduler-introduction/" data-toggle="tooltip" data-placement="top" title="Go 源码分析：scheduler 工作流程">&lt; Newer</a>
-      </li>
-      <li class="pager-older">
-        <a href="/posts/introduction-to-swagger-a-tool-simplify-your-api-development/" data-toggle="tooltip" data-placement="top" title="利用 swagger 管理 API 开发">Older &gt;</a>
-      </li>
-    </ul>
-  </div>
+  
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: 'eb2224abc6c383a0371e',
+        clientSecret: '054b7811c14e27f869e637afd14f6f380fa632c1',
+        repo: 'chasecs.github.io',
+        owner: 'chasecs',
+        admin: ['chasecs'],
+        id: decodeURI(location.pathname), 
+        distractionFreeMode: false 
+    });
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+</script>
+
+
+  <ul class="pager article-pager">
+    <li class="pager-newer">
+      <a href="/posts/go-scheduler-introduction/" data-toggle="tooltip" data-placement="top"
+        title="Go 源码分析：scheduler 工作流程">&lt; Newer</a>
+    </li>
+    <li class="pager-older">
+      <a href="/posts/introduction-to-swagger-a-tool-simplify-your-api-development/" data-toggle="tooltip" data-placement="top"
+        title="利用 swagger 管理 API 开发">Older &gt;</a>
+    </li>
+  </ul>
+</div>
 
 
 <div class="site-footer">
