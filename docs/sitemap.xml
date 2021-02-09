@@ -3,6 +3,21 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://example.com/posts/how-to-implement-red-black-trees-deletion/</loc>
+    <lastmod>2021-02-10T02:43:06+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://example.com/posts/</loc>
+    <lastmod>2021-02-10T02:43:06+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://example.com/</loc>
+    <lastmod>2021-02-10T02:43:06+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://example.com/categories/</loc>
     <lastmod>2020-12-05T17:36:56+08:00</lastmod>
   </url>
@@ -14,16 +29,6 @@
   
   <url>
     <loc>https://example.com/posts/the-philosophy-of-go-error-handling/</loc>
-    <lastmod>2020-12-05T17:36:56+08:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://example.com/posts/</loc>
-    <lastmod>2020-12-05T17:36:56+08:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://example.com/</loc>
     <lastmod>2020-12-05T17:36:56+08:00</lastmod>
   </url>
   
