@@ -17,7 +17,7 @@ Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系
   <meta name="twitter:description" content="注：本文涉及的源码为 go 1.13 版本
 最近一直在看 Go 调度器的源码，查了不少资料，对 goroutine 的调度过程有了一些了解，也对 Go 如何支撑高并发、并行计算有个大概的认识。
 Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系统线程 (OS thread )上执行，是 Go runtime 的两大组成部分之一，另一个是内存分配/垃圾回 …">
-  <meta name="author" content="ttimehc"/>
+  <meta name="author" content="ttimehc" />
   <meta property="og:site_name" content="编程札记 Programming Notes" />
   <meta property="og:url" content="https://example.com/posts/go-scheduler-introduction/" />
   <meta property="og:type" content="article" />
@@ -31,8 +31,9 @@ Go 调度器（scheduler）负责把各个 goroutine 分配到相应的操作系
   <script src="/js/script.js"></script>
   <script src="/js/custom.js"></script>
   <script defer src="/js/fontawesome.js"></script>
-</head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script>
 
+</head>
 <body>
 
 <header class="site-header">
